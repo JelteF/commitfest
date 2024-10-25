@@ -13,6 +13,30 @@
       <td>{{patch.name}}</td>
     </tr>
     <tr>
+      <th>CI (CFBot)</th>
+      <td>
+        {%if not cfbot_branch.commit_id %}
+        <a href="https://cirrus-ci.com/github/postgresql-cfbot/postgresql/cf%2F{{patch.id}}">
+          <span class="label label-warning">Needs rebase!</span></a>
+        {%else%}
+        <a href="https://cirrus-ci.com/github/postgresql-cfbot/postgresql/cf%2F{{patch.id}}">
+        <span class="label label-default">Summary</span></a>
+        {%for c in cfbot_tasks %}
+            {%if c.status == 'COMPLETED'%}
+            <a href="https://cirrusci.com/task/{{c.id}}" title="{{c.task_name}}"><img src="/media/commitfest/new_success.svg"/></a>
+            {%endif%}
+            {%if c.status == 'CREATED' %}
+            <a href="https://cirrusci.com/task/{{c.id}}" title="{{c.task_name}}"><img src="/media/commitfest/waiting_to_start.svg"/></a>
+            {%endif%}
+            {%if c.status in bad_tasks_statuses %}
+            <a href="https://cirrusci.com/task/{{c.id}}" title="{{c.task_name}}"><img src="/media/commitfest/new_failure.svg"/></a>
+            {%endif%}
+        {%endfor%}
+        {%endif%}
+        </a>
+      </td>
+    </tr>
+    <tr>
       <th>Topic</th>
       <td>{{patch.topic}}</td>
     </tr>

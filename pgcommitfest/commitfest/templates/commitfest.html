@@ -66,6 +66,7 @@
    <th>Author</th>
    <th>Reviewers</th>
    <th>Committer</th>
+   <th>CI status</th>
    <th>{%if p.is_open%}<a href="#" style="color:#333333;" onclick="return sortpatches(3);">Num cfs</a>{%if sortkey == 3%}<div style="float:right;"><i class="glyphicon glyphicon-arrow-down"></i></div>{%endif%}{%else%}Num cfs{%endif%}</th>
    <th>{%if p.is_open%}<a href="#" style="color:#333333;" onclick="return sortpatches(1);">Latest activity</a>{%if sortkey == 1%}<div style="float:right;"><i class="glyphicon glyphicon-arrow-down"></i></div>{%endif%}{%else%}Latest activity{%endif%}</th>
    <th>{%if p.is_open%}<a href="#" style="color:#333333;" onclick="return sortpatches(2);">Latest mail</a>{%if sortkey == 2%}<div style="float:right;"><i class="glyphicon glyphicon-arrow-down"></i></div>{%endif%}{%else%}Latest mail{%endif%}</th>
@@ -89,6 +90,30 @@
    <td>{{p.author_names|default:''}}</td>
    <td>{{p.reviewer_names|default:''}}</td>
    <td>{{p.committer|default:''}}</td>
+   <td>
+    {%if p.cfbot_results %}
+    <a href="https://cirrus-ci.com/github/postgresql-cfbot/postgresql/cf%2F{{p.id}}">
+    {%if p.cfbot_results.needs_rebase %}
+    <span class="label label-warning">Needs rebase!</span>
+    {%else%}
+     {%if p.cfbot_results.waiting > 1 %}
+     <span class="label label-success">{{p.cfbot_results.waiting}}: waiting</span>
+     {%endif%}
+     {%if p.cfbot_results.completed > 1 %}
+     <span class="label label-success">{{p.cfbot_results.completed}}: success</span>
+     {%endif%}
+     {%if p.cfbot_results.running > 1 %}
+     <span class="label label-info">{{p.cfbot_results.running}}: running</span>
+     {%endif%}
+     {%if p.cfbot_results.failed > 1 %}
+     <span class="label label-danger">{{p.cfbot_results.failed}}: fail</span>
+     {%endif%}
+    {%endif%}
+    </a>
+    {% else %}
+      ????
+    {%endif%}
+   </td>
    <td>{{p.num_cfs}}</td>
    <td style="white-space: nowrap;">{{p.modified|date:"Y-m-d"}}<br/>{{p.modified|date:"H:i"}}</td>
    <td style="white-space: nowrap;">{{p.lastmail|date:"Y-m-d"}}<br/>{{p.lastmail|date:"H:i"}}</td>

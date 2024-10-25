@@ -19,7 +19,7 @@ import urllib
 from pgcommitfest.mailqueue.util import send_mail, send_simple_mail
 from pgcommitfest.userprofile.util import UserWrapper
 
-from .models import CommitFest, Patch, PatchOnCommitFest, PatchHistory, Committer
+from .models import CommitFest, Patch, PatchOnCommitFest, PatchHistory, Committer, CfbotBranch, CfbotTask
 from .models import MailThread
 from .forms import PatchForm, NewPatchForm, CommentForm, CommitFestFilterForm
 from .forms import BulkEmailForm
@@ -209,11 +209,27 @@ def commitfest(request, cfid):
 
     # Let's not overload the poor django ORM
     curs = connection.cursor()
-    curs.execute("""SELECT p.id, p.name, poc.status, v.version AS targetversion, p.created, p.modified, p.lastmail, committer.username AS committer, t.topic,
+    curs.execute("""
+SELECT p.id, p.name, poc.status, v.version AS targetversion, p.created, p.modified, p.lastmail, committer.username AS committer, t.topic,
 (poc.status=ANY(%(openstatuses)s)) AS is_open,
 (SELECT string_agg(first_name || ' ' || last_name || ' (' || username || ')', ', ') FROM auth_user INNER JOIN commitfest_patch_authors cpa ON cpa.user_id=auth_user.id WHERE cpa.patch_id=p.id) AS author_names,
 (SELECT string_agg(first_name || ' ' || last_name || ' (' || username || ')', ', ') FROM auth_user INNER JOIN commitfest_patch_reviewers cpr ON cpr.user_id=auth_user.id WHERE cpr.patch_id=p.id) AS reviewer_names,
-(SELECT count(1) FROM commitfest_patchoncommitfest pcf WHERE pcf.patch_id=p.id) AS num_cfs
+(SELECT count(1) FROM commitfest_patchoncommitfest pcf WHERE pcf.patch_id=p.id) AS num_cfs,
+(
+    SELECT row_to_json(t) as cfbot_results
+    from (
+        SELECT 
+            sum((task.status = 'CREATED')::int) as waiting,
+            sum((task.status = 'COMPLETED')::int) as completed,
+            sum((task.status in ('CREATED', 'EXECUTING'))::int) running,
+            sum((task.status in ('ABORTED', 'ERRORED', 'FAILED'))::int) failed,
+            branch.commit_id IS NULL as needs_rebase
+        FROM commitfest_cfbotbranch branch
+        LEFT JOIN commitfest_cfbottask task ON task.branch_id = branch.branch_id
+        WHERE branch.patch_id=p.id
+        GROUP BY branch.commit_id
+    ) t
+)
 FROM commitfest_patch p
 INNER JOIN commitfest_patchoncommitfest poc ON poc.patch_id=p.id
 INNER JOIN commitfest_topic t ON t.id=p.topic_id
@@ -311,6 +327,13 @@ def patch(request, cfid, patchid):
     patch_commitfests = PatchOnCommitFest.objects.select_related('commitfest').filter(patch=patch).order_by('-commitfest__startdate')
     committers = Committer.objects.filter(active=True).order_by('user__last_name', 'user__first_name')
 
+    
+    cfbot_branch = patch.cfbot_branch
+    cfbot_tasks = cfbot_branch.tasks.order_by('position') if cfbot_branch else []
+    print(cfbot_branch)
+    print(cfbot_tasks)
+
+
     # XXX: this creates a session, so find a smarter way. Probably handle
     # it in the callback and just ask the user then?
     if request.user.is_authenticated:
@@ -333,6 +356,9 @@ def patch(request, cfid, patchid):
         'cf': cf,
         'patch': patch,
         'patch_commitfests': patch_commitfests,
+        'cfbot_branch': cfbot_branch,
+        'cfbot_tasks': cfbot_tasks,
+        'bad_task_statuses': ('ABORTED', 'ERRORED', 'FAILED'),
         'is_committer': is_committer,
         'is_this_committer': is_this_committer,
         'is_reviewer': is_reviewer,
@@ -787,6 +813,89 @@ def send_email(request, cfid):
         'savebutton': 'Send email',
     })
 
+
+@transaction.atomic
+def cfbot_ingest(message):
+    """Ingest a single message status update message receive from cfbot.  It
+     should be a Python dictionary, decoded from JSON already."""
+
+    cursor = connection.cursor()
+
+    # Every message should have a shared_secret, and it should match.
+    if message["shared_secret"] != "hello magnus":
+        raise Exception("Invalid shared_secret")
+
+    branch_status = message["branch_status"]
+    patch_id = branch_status["submission_id"]
+    branch_id = branch_status["branch_id"]
+
+    old_branch = CfbotBranch.objects.select_for_update().filter(patch_id=patch_id).first()
+    if old_branch and old_branch.branch_id != branch_id and old_branch.created > branch_status["created"]:
+        # This is a message for an old branch, ignore it.
+        return
+
+    # Every message should have a branch_status, which we will INSERT
+    # or UPDATE.  We do this first, because cfbot_task refers to it.
+    cursor.execute("""INSERT INTO commitfest_cfbotbranch (patch_id, branch_id,
+                                                branch_name, commit_id,
+                                                apply_url, status,
+                                                created, modified)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (patch_id) DO UPDATE
+                        SET status = EXCLUDED.status,
+                            modified = EXCLUDED.modified,
+                            branch_id = EXCLUDED.branch_id,
+                            branch_name = EXCLUDED.branch_name,
+                            commit_id = EXCLUDED.commit_id,
+                            apply_url = EXCLUDED.apply_url,
+                            created = EXCLUDED.created
+                        WHERE commitfest_cfbotbranch.modified < EXCLUDED.modified
+                        """,
+                    (patch_id,
+                    branch_id,
+                    branch_status["branch_name"],
+                    branch_status["commit_id"],
+                    branch_status["apply_url"],
+                    branch_status["status"],
+                    branch_status["created"],
+                    branch_status["modified"]))
+
+    # Most messages have a task_status.  It might be missing in rare cases, like
+    # when cfbot decides that a whole branch has timed out.  We INSERT or
+    # UPDATE.
+    if "task_status" in message:
+        task_status = message["task_status"]
+        cursor.execute("""INSERT INTO commitfest_cfbottask (id, task_name, patch_id, branch_id,
+                                               position, status,
+                                               created, modified)
+                       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                       ON CONFLICT (id) DO UPDATE
+                         SET status = EXCLUDED.status,
+                             modified = EXCLUDED.modified
+                       WHERE commitfest_cfbottask.modified < EXCLUDED.modified""",
+                 (task_status["task_id"],
+                  task_status["task_name"],
+                  patch_id,
+                  branch_id,
+                  task_status["position"],
+                  task_status["status"],
+                  task_status["created"],
+                  task_status["modified"]))
+
+    cursor.execute("DELETE FROM commitfest_cfbottask WHERE patch_id=%s AND branch_id != %s", (patch_id, branch_id))
+
+@csrf_exempt
+def cfbot_notify(request):
+    if request.method != 'POST':
+        return HttpResponseForbidden("Invalid method")
+
+    j = json.loads(request.body)
+    if j['shared_secret'] != "hello magnus":
+        return HttpResponseForbidden("Invalid API key")
+
+    print(j)
+    cfbot_ingest(j)
+    return HttpResponse(status=200)
 
 @csrf_exempt
 def thread_notify(request):
