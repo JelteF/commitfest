@@ -4,15 +4,26 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('commitfest', '0006_cfbot_integration'),
+        ("commitfest", "0006_cfbot_integration"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='cfbottask',
-            name='status',
-            field=models.TextField(choices=[('CREATED', 'Created'), ('NEEDS_APPROVAL', 'Needs Approval'), ('TRIGGERED', 'Triggered'), ('EXECUTING', 'Executing'), ('FAILED', 'Failed'), ('COMPLETED', 'Completed'), ('SCHEDULED', 'Scheduled'), ('ABORTED', 'Aborted'), ('ERRORED', 'Errored')]),
+            model_name="cfbottask",
+            name="status",
+            field=models.TextField(
+                choices=[
+                    ("CREATED", "Created"),
+                    ("NEEDS_APPROVAL", "Needs Approval"),
+                    ("TRIGGERED", "Triggered"),
+                    ("EXECUTING", "Executing"),
+                    ("FAILED", "Failed"),
+                    ("COMPLETED", "Completed"),
+                    ("SCHEDULED", "Scheduled"),
+                    ("ABORTED", "Aborted"),
+                    ("ERRORED", "Errored"),
+                ]
+            ),
         ),
     ]
