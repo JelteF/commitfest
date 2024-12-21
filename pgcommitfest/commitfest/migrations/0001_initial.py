@@ -16,12 +16,26 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CommitFest',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('name', models.CharField(unique=True, max_length=100)),
                 (
                     'status',
                     models.IntegerField(
-                        default=1, choices=[(1, 'Future'), (2, 'Open'), (3, 'In Progress'), (4, 'Closed')]
+                        default=1,
+                        choices=[
+                            (1, 'Future'),
+                            (2, 'Open'),
+                            (3, 'In Progress'),
+                            (4, 'Closed'),
+                        ],
                     ),
                 ),
                 ('startdate', models.DateField(null=True, blank=True)),
@@ -38,7 +52,10 @@ class Migration(migrations.Migration):
                 (
                     'user',
                     models.OneToOneField(
-                        primary_key=True, serialize=False, to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+                        primary_key=True,
+                        serialize=False,
+                        to=settings.AUTH_USER_MODEL,
+                        on_delete=models.CASCADE,
                     ),
                 ),
                 ('active', models.BooleanField(default=True)),
@@ -50,7 +67,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MailThread',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('messageid', models.CharField(unique=True, max_length=1000)),
                 ('subject', models.CharField(max_length=500)),
                 ('firstmessage', models.DateTimeField()),
@@ -67,15 +92,33 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MailThreadAnnotation',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('date', models.DateTimeField(auto_now_add=True)),
                 ('msgid', models.CharField(max_length=1000)),
                 ('annotationtext', models.TextField(max_length=2000)),
                 ('mailsubject', models.CharField(max_length=500)),
                 ('maildate', models.DateTimeField()),
                 ('mailauthor', models.CharField(max_length=500)),
-                ('mailthread', models.ForeignKey(to='commitfest.MailThread', on_delete=models.CASCADE)),
-                ('user', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
+                (
+                    'mailthread',
+                    models.ForeignKey(
+                        to='commitfest.MailThread', on_delete=models.CASCADE
+                    ),
+                ),
+                (
+                    'user',
+                    models.ForeignKey(
+                        to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+                    ),
+                ),
             ],
             options={
                 'ordering': ('date',),
@@ -84,14 +127,27 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='MailThreadAttachment',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('messageid', models.CharField(max_length=1000)),
                 ('attachmentid', models.IntegerField()),
                 ('filename', models.CharField(max_length=1000, blank=True)),
                 ('date', models.DateTimeField()),
                 ('author', models.CharField(max_length=500)),
                 ('ispatch', models.BooleanField(null=True)),
-                ('mailthread', models.ForeignKey(to='commitfest.MailThread', on_delete=models.CASCADE)),
+                (
+                    'mailthread',
+                    models.ForeignKey(
+                        to='commitfest.MailThread', on_delete=models.CASCADE
+                    ),
+                ),
             ],
             options={
                 'ordering': ('-date',),
@@ -100,7 +156,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Patch',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('name', models.CharField(max_length=500, verbose_name='Description')),
                 ('wikilink', models.URLField(default='', null=False, blank=True)),
                 ('gitlink', models.URLField(default='', null=False, blank=True)),
@@ -109,7 +173,11 @@ class Migration(migrations.Migration):
                 ('lastmail', models.DateTimeField(null=True, blank=True)),
                 (
                     'authors',
-                    models.ManyToManyField(related_name='patch_author', to=settings.AUTH_USER_MODEL, blank=True),
+                    models.ManyToManyField(
+                        related_name='patch_author',
+                        to=settings.AUTH_USER_MODEL,
+                        blank=True,
+                    ),
                 ),
             ],
             options={
@@ -120,11 +188,27 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='PatchHistory',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('date', models.DateTimeField(auto_now_add=True)),
                 ('what', models.CharField(max_length=500)),
-                ('by', models.ForeignKey(to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE)),
-                ('patch', models.ForeignKey(to='commitfest.Patch', on_delete=models.CASCADE)),
+                (
+                    'by',
+                    models.ForeignKey(
+                        to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE
+                    ),
+                ),
+                (
+                    'patch',
+                    models.ForeignKey(to='commitfest.Patch', on_delete=models.CASCADE),
+                ),
             ],
             options={
                 'ordering': ('-date',),
@@ -133,7 +217,15 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='PatchOnCommitFest',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('enterdate', models.DateTimeField()),
                 ('leavedate', models.DateTimeField(null=True, blank=True)),
                 (
@@ -151,8 +243,16 @@ class Migration(migrations.Migration):
                         ],
                     ),
                 ),
-                ('commitfest', models.ForeignKey(to='commitfest.CommitFest', on_delete=models.CASCADE)),
-                ('patch', models.ForeignKey(to='commitfest.Patch', on_delete=models.CASCADE)),
+                (
+                    'commitfest',
+                    models.ForeignKey(
+                        to='commitfest.CommitFest', on_delete=models.CASCADE
+                    ),
+                ),
+                (
+                    'patch',
+                    models.ForeignKey(to='commitfest.Patch', on_delete=models.CASCADE),
+                ),
             ],
             options={
                 'ordering': ('-commitfest__startdate',),
@@ -169,24 +269,41 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Topic',
             fields=[
-                ('id', models.AutoField(verbose_name='ID', serialize=False, auto_created=True, primary_key=True)),
+                (
+                    'id',
+                    models.AutoField(
+                        verbose_name='ID',
+                        serialize=False,
+                        auto_created=True,
+                        primary_key=True,
+                    ),
+                ),
                 ('topic', models.CharField(max_length=100)),
             ],
         ),
         migrations.AddField(
             model_name='patch',
             name='commitfests',
-            field=models.ManyToManyField(to='commitfest.CommitFest', through='commitfest.PatchOnCommitFest'),
+            field=models.ManyToManyField(
+                to='commitfest.CommitFest', through='commitfest.PatchOnCommitFest'
+            ),
         ),
         migrations.AddField(
             model_name='patch',
             name='committer',
-            field=models.ForeignKey(blank=True, to='commitfest.Committer', null=True, on_delete=models.CASCADE),
+            field=models.ForeignKey(
+                blank=True,
+                to='commitfest.Committer',
+                null=True,
+                on_delete=models.CASCADE,
+            ),
         ),
         migrations.AddField(
             model_name='patch',
             name='reviewers',
-            field=models.ManyToManyField(related_name='patch_reviewer', to=settings.AUTH_USER_MODEL, blank=True),
+            field=models.ManyToManyField(
+                related_name='patch_reviewer', to=settings.AUTH_USER_MODEL, blank=True
+            ),
         ),
         migrations.AddField(
             model_name='patch',

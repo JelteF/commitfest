@@ -30,7 +30,9 @@ if __name__ == "__main__":
 
     # Logging always done to stdout, but we can turn on/off how much
     logging.basicConfig(
-        format='%(asctime)s %(levelname)s: %(msg)s', level=debug and logging.DEBUG or logging.INFO, stream=sys.stdout
+        format='%(asctime)s %(levelname)s: %(msg)s',
+        level=debug and logging.DEBUG or logging.INFO,
+        stream=sys.stdout,
     )
 
     mag = magic.open(magic.MIME)
@@ -49,7 +51,10 @@ if __name__ == "__main__":
 
         resp = requests.get(
             "http{0}://{1}:{2}{3}".format(
-                settings.ARCHIVES_PORT == 443 and 's' or '', settings.ARCHIVES_SERVER, settings.ARCHIVES_PORT, url
+                settings.ARCHIVES_PORT == 443 and 's' or '',
+                settings.ARCHIVES_SERVER,
+                settings.ARCHIVES_PORT,
+                url,
             ),
             headers={
                 'Host': settings.ARCHIVES_HOST,

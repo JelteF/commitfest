@@ -29,10 +29,13 @@ class CommitFestFilterForm(forms.Form):
         q = Q(patch_author__commitfests=cf) | Q(patch_reviewer__commitfests=cf)
         userchoices = [(-1, '* All'), (-2, '* None'), (-3, '* Yourself')] + [
             (u.id, '%s %s (%s)' % (u.first_name, u.last_name, u.username))
-            for u in User.objects.filter(q).distinct().order_by('first_name', 'last_name')
+            for u in User.objects.filter(q)
+            .distinct()
+            .order_by('first_name', 'last_name')
         ]
         self.fields['targetversion'] = forms.ChoiceField(
-            choices=[('-1', '* All'), ('-2', '* None')] + [(v.id, v.version) for v in TargetVersion.objects.all()],
+            choices=[('-1', '* All'), ('-2', '* None')]
+            + [(v.id, v.version) for v in TargetVersion.objects.all()],
             required=False,
             label="Target version",
         )
@@ -88,12 +91,21 @@ class PatchForm(forms.ModelForm):
             if 'data' in kwargs and str(field) in kwargs['data']:
                 vals.extend([x for x in kwargs['data'].getlist(field)])
             self.fields[field].widget.attrs['data-selecturl'] = url
-            self.fields[field].queryset = self.fields[field].queryset.filter(pk__in=set(vals))
-            self.fields[field].label_from_instance = lambda u: '{} ({})'.format(u.username, u.get_full_name())
+            self.fields[field].queryset = self.fields[field].queryset.filter(
+                pk__in=set(vals)
+            )
+            self.fields[field].label_from_instance = lambda u: '{} ({})'.format(
+                u.username, u.get_full_name()
+            )
 
 
 class NewPatchForm(forms.ModelForm):
-    threadmsgid = forms.CharField(max_length=200, required=True, label='Specify thread msgid', widget=ThreadPickWidget)
+    threadmsgid = forms.CharField(
+        max_length=200,
+        required=True,
+        label='Specify thread msgid',
+        widget=ThreadPickWidget,
+    )
     #    patchfile = forms.FileField(allow_empty_file=False, max_length=50000, label='or upload patch file', required=False, help_text='This may be supported sometime in the future, and would then autogenerate a mail to the hackers list. At such a time, the threadmsgid would no longer be required.')
 
     class Meta:
@@ -115,10 +127,20 @@ class NewPatchForm(forms.ModelForm):
 
 def _fetch_thread_choices(patch):
     for mt in patch.mailthread_set.order_by('-latestmessage'):
-        ti = sorted(_archivesAPI('/message-id.json/%s' % mt.messageid), key=lambda x: x['date'], reverse=True)
+        ti = sorted(
+            _archivesAPI('/message-id.json/%s' % mt.messageid),
+            key=lambda x: x['date'],
+            reverse=True,
+        )
         yield [
             mt.subject,
-            [('%s,%s' % (mt.messageid, t['msgid']), 'From %s at %s' % (t['from'], t['date'])) for t in ti],
+            [
+                (
+                    '%s,%s' % (mt.messageid, t['msgid']),
+                    'From %s at %s' % (t['from'], t['date']),
+                )
+                for t in ti
+            ],
         ]
 
 
@@ -130,7 +152,10 @@ review_state_choices = (
 
 def reviewfield(label):
     return forms.MultipleChoiceField(
-        choices=review_state_choices, label=label, widget=forms.CheckboxSelectMultiple, required=False
+        choices=review_state_choices,
+        label=label,
+        widget=forms.CheckboxSelectMultiple,
+        required=False,
     )
 
 
@@ -144,7 +169,9 @@ class CommentForm(forms.Form):
     review_doc = reviewfield('Documentation')
 
     message = forms.CharField(required=True, widget=forms.Textarea)
-    newstatus = forms.ChoiceField(choices=PatchOnCommitFest.OPEN_STATUS_CHOICES(), label='New status')
+    newstatus = forms.ChoiceField(
+        choices=PatchOnCommitFest.OPEN_STATUS_CHOICES(), label='New status'
+    )
 
     def __init__(self, patch, poc, is_review, *args, **kwargs):
         super(CommentForm, self).__init__(*args, **kwargs)
@@ -173,8 +200,13 @@ class CommentForm(forms.Form):
         if self.is_review:
             for fn, f in self.fields.items():
                 if fn.startswith('review_') and fn in self.cleaned_data:
-                    if '1' in self.cleaned_data[fn] and '0' not in self.cleaned_data[fn]:
-                        self.errors[fn] = (('Cannot pass a test without performing it!'),)
+                    if (
+                        '1' in self.cleaned_data[fn]
+                        and '0' not in self.cleaned_data[fn]
+                    ):
+                        self.errors[fn] = (
+                            ('Cannot pass a test without performing it!'),
+                        )
         return self.cleaned_data
 
 

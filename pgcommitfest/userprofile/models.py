@@ -3,7 +3,9 @@ from django.contrib.auth.models import User
 
 
 class UserExtraEmail(models.Model):
-    user = models.ForeignKey(User, null=False, blank=False, db_index=True, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        User, null=False, blank=False, db_index=True, on_delete=models.CASCADE
+    )
     email = models.EmailField(max_length=100, null=False, blank=False, unique=True)
 
     def __str__(self):
@@ -17,7 +19,11 @@ class UserExtraEmail(models.Model):
 class UserProfile(models.Model):
     user = models.OneToOneField(User, null=False, blank=False, on_delete=models.CASCADE)
     selectedemail = models.ForeignKey(
-        UserExtraEmail, null=True, blank=True, verbose_name='Sender email', on_delete=models.SET_NULL
+        UserExtraEmail,
+        null=True,
+        blank=True,
+        verbose_name='Sender email',
+        on_delete=models.SET_NULL,
     )
     notifyemail = models.ForeignKey(
         UserExtraEmail,
@@ -28,13 +34,22 @@ class UserProfile(models.Model):
         on_delete=models.SET_NULL,
     )
     notify_all_author = models.BooleanField(
-        null=False, blank=False, default=False, verbose_name="Notify on all where author"
+        null=False,
+        blank=False,
+        default=False,
+        verbose_name="Notify on all where author",
     )
     notify_all_reviewer = models.BooleanField(
-        null=False, blank=False, default=False, verbose_name="Notify on all where reviewer"
+        null=False,
+        blank=False,
+        default=False,
+        verbose_name="Notify on all where reviewer",
     )
     notify_all_committer = models.BooleanField(
-        null=False, blank=False, default=False, verbose_name="Notify on all where committer"
+        null=False,
+        blank=False,
+        default=False,
+        verbose_name="Notify on all where committer",
     )
 
     def __str__(self):

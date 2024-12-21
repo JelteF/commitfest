@@ -9,7 +9,9 @@ from email import encoders
 from .models import QueuedMail
 
 
-def send_simple_mail(sender, receiver, subject, msgtxt, sending_username, attachments=None):
+def send_simple_mail(
+    sender, receiver, subject, msgtxt, sending_username, attachments=None
+):
     # attachment format, each is a tuple of (name, mimetype,contents)
     # content should already be base64 encoded
     msg = MIMEMultipart()
@@ -28,7 +30,9 @@ def send_simple_mail(sender, receiver, subject, msgtxt, sending_username, attach
             main, sub = contenttype.split('/')
             part = MIMENonMultipart(main, sub)
             part.set_payload(content)
-            part.add_header('Content-Disposition', 'attachment; filename="%s"' % filename)
+            part.add_header(
+                'Content-Disposition', 'attachment; filename="%s"' % filename
+            )
             encoders.encode_base64(part)
             msg.attach(part)
 
@@ -42,6 +46,18 @@ def send_mail(sender, receiver, fullmsg):
 
 
 def send_template_mail(
-    sender, senderaccountname, receiver, subject, templatename, templateattr={}, usergenerated=False
+    sender,
+    senderaccountname,
+    receiver,
+    subject,
+    templatename,
+    templateattr={},
+    usergenerated=False,
 ):
-    send_simple_mail(sender, receiver, subject, get_template(templatename).render(templateattr), senderaccountname)
+    send_simple_mail(
+        sender,
+        receiver,
+        subject,
+        get_template(templatename).render(templateattr),
+        senderaccountname,
+    )

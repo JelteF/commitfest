@@ -71,7 +71,9 @@ class Migration(migrations.Migration):
                 (
                     'patch',
                     models.ForeignKey(
-                        on_delete=django.db.models.deletion.CASCADE, related_name='cfbot_tasks', to='commitfest.patch'
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name='cfbot_tasks',
+                        to='commitfest.patch',
                     ),
                 ),
             ],

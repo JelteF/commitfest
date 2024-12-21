@@ -10,7 +10,9 @@ class ActivityFeed(Feed):
         self.activity = activity
         if cf:
             self.cfid = cf.id
-            self.title = self.description = 'PostgreSQL Commitfest {0} Activity Log'.format(cf.name)
+            self.title = self.description = (
+                'PostgreSQL Commitfest {0} Activity Log'.format(cf.name)
+            )
         else:
             self.cfid = None
 
@@ -21,11 +23,17 @@ class ActivityFeed(Feed):
         return item['name']
 
     def item_description(self, item):
-        return "<div>Patch: {name}</div><div>User: {by}</div>\n<div>{what}</div>".format(**item)
+        return (
+            "<div>Patch: {name}</div><div>User: {by}</div>\n<div>{what}</div>".format(
+                **item
+            )
+        )
 
     def item_link(self, item):
         if self.cfid:
-            return 'https://commitfest.postgresql.org/{0}/{1}/'.format(self.cfid, item['patchid'])
+            return 'https://commitfest.postgresql.org/{0}/{1}/'.format(
+                self.cfid, item['patchid']
+            )
         else:
             return 'https://commitfest.postgresql.org/{cfid}/{patchid}/'.format(**item)
 

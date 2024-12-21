@@ -20,7 +20,14 @@ import urllib
 from pgcommitfest.mailqueue.util import send_mail, send_simple_mail
 from pgcommitfest.userprofile.util import UserWrapper
 
-from .models import CommitFest, Patch, PatchOnCommitFest, PatchHistory, Committer, CfbotBranch
+from .models import (
+    CommitFest,
+    Patch,
+    PatchOnCommitFest,
+    PatchHistory,
+    Committer,
+    CfbotBranch,
+)
 from .models import MailThread
 from .forms import PatchForm, NewPatchForm, CommentForm, CommitFestFilterForm
 from .forms import BulkEmailForm
@@ -31,7 +38,9 @@ from .feeds import ActivityFeed
 def home(request):
     commitfests = list(CommitFest.objects.all())
     opencf = next((c for c in commitfests if c.status == CommitFest.STATUS_OPEN), None)
-    inprogresscf = next((c for c in commitfests if c.status == CommitFest.STATUS_INPROGRESS), None)
+    inprogresscf = next(
+        (c for c in commitfests if c.status == CommitFest.STATUS_INPROGRESS), None
+    )
 
     return render(
         request,
@@ -88,7 +97,9 @@ def activity(request, cfid=None, rss=None):
                 'commitfest': cf,
                 'activity': activity,
                 'title': cf and 'Commitfest activity' or 'Global Commitfest activity',
-                'rss_alternate': cf and '/{0}/activity.rss/'.format(cf.id) or '/activity.rss/',
+                'rss_alternate': cf
+                and '/{0}/activity.rss/'.format(cf.id)
+                or '/activity.rss/',
                 'rss_alternate_title': 'PostgreSQL Commitfest Activity Log',
                 'breadcrumbs': cf
                 and [
@@ -112,10 +123,17 @@ def redir(request, what, end):
         raise Http404()
 
     if len(cfs) == 0:
-        messages.warning(request, "No {0} commitfests exist, redirecting to startpage.".format(what))
+        messages.warning(
+            request, "No {0} commitfests exist, redirecting to startpage.".format(what)
+        )
         return HttpResponseRedirect("/")
     if len(cfs) != 1:
-        messages.warning(request, "More than one {0} commitfest exists, redirecting to startpage instead.".format(what))
+        messages.warning(
+            request,
+            "More than one {0} commitfest exists, redirecting to startpage instead.".format(
+                what
+            ),
+        )
         return HttpResponseRedirect("/")
 
     query_string = request.GET.urlencode()
@@ -152,11 +170,15 @@ def commitfest(request, cfid):
 
     if request.GET.get('author', '-1') != '-1':
         if request.GET['author'] == '-2':
-            whereclauses.append("NOT EXISTS (SELECT 1 FROM commitfest_patch_authors cpa WHERE cpa.patch_id=p.id)")
+            whereclauses.append(
+                "NOT EXISTS (SELECT 1 FROM commitfest_patch_authors cpa WHERE cpa.patch_id=p.id)"
+            )
         elif request.GET['author'] == '-3':
             # Checking for "yourself" requires the user to be logged in!
             if not request.user.is_authenticated:
-                return HttpResponseRedirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+                return HttpResponseRedirect(
+                    '%s?next=%s' % (settings.LOGIN_URL, request.path)
+                )
             whereclauses.append(
                 "EXISTS (SELECT 1 FROM commitfest_patch_authors cpa WHERE cpa.patch_id=p.id AND cpa.user_id=%(self)s)"
             )
@@ -173,11 +195,15 @@ def commitfest(request, cfid):
 
     if request.GET.get('reviewer', '-1') != '-1':
         if request.GET['reviewer'] == '-2':
-            whereclauses.append("NOT EXISTS (SELECT 1 FROM commitfest_patch_reviewers cpr WHERE cpr.patch_id=p.id)")
+            whereclauses.append(
+                "NOT EXISTS (SELECT 1 FROM commitfest_patch_reviewers cpr WHERE cpr.patch_id=p.id)"
+            )
         elif request.GET['reviewer'] == '-3':
             # Checking for "yourself" requires the user to be logged in!
             if not request.user.is_authenticated:
-                return HttpResponseRedirect('%s?next=%s' % (settings.LOGIN_URL, request.path))
+                return HttpResponseRedirect(
+                    '%s?next=%s' % (settings.LOGIN_URL, request.path)
+                )
             whereclauses.append(
                 "EXISTS (SELECT 1 FROM commitfest_patch_reviewers cpr WHERE cpr.patch_id=p.id AND cpr.user_id=%(self)s)"
             )
@@ -266,7 +292,9 @@ GROUP BY p.id, poc.id, committer.id, t.id, v.version
 ORDER BY is_open DESC, {1}""".format(where_str, orderby_str),
         params,
     )
-    patches = [dict(zip([col[0] for col in curs.description], row)) for row in curs.fetchall()]
+    patches = [
+        dict(zip([col[0] for col in curs.description], row)) for row in curs.fetchall()
+    ]
 
     # Generate patch status summary.
     curs = connection.cursor()
@@ -388,11 +416,17 @@ def patch_redirect(request, patchid):
 
 def patch(request, cfid, patchid):
     cf = get_object_or_404(CommitFest, pk=cfid)
-    patch = get_object_or_404(Patch.objects.select_related(), pk=patchid, commitfests=cf)
-    patch_commitfests = (
-        PatchOnCommitFest.objects.select_related('commitfest').filter(patch=patch).order_by('-commitfest__startdate')
+    patch = get_object_or_404(
+        Patch.objects.select_related(), pk=patchid, commitfests=cf
     )
-    committers = Committer.objects.filter(active=True).order_by('user__last_name', 'user__first_name')
+    patch_commitfests = (
+        PatchOnCommitFest.objects.select_related('commitfest')
+        .filter(patch=patch)
+        .order_by('-commitfest__startdate')
+    )
+    committers = Committer.objects.filter(active=True).order_by(
+        'user__last_name', 'user__first_name'
+    )
 
     cfbot_branch = getattr(patch, 'cfbot_branch', None)
     cfbot_tasks = patch.cfbot_tasks.order_by('position') if cfbot_branch else []
@@ -460,8 +494,14 @@ def patchform(request, cfid, patchid):
             # Track all changes
             for field, values in r.diff.items():
                 PatchHistory(
-                    patch=patch, by=request.user, what='Changed %s to %s' % (field, values[1])
-                ).save_and_notify(prevcommitter=prevcommitter, prevreviewers=prevreviewers, prevauthors=prevauthors)
+                    patch=patch,
+                    by=request.user,
+                    what='Changed %s to %s' % (field, values[1]),
+                ).save_and_notify(
+                    prevcommitter=prevcommitter,
+                    prevreviewers=prevreviewers,
+                    prevauthors=prevauthors,
+                )
             r.set_modified()
             r.save()
             return HttpResponseRedirect('../../%s/' % r.pk)
@@ -496,20 +536,30 @@ def newpatch(request, cfid):
     if request.method == 'POST':
         form = NewPatchForm(data=request.POST)
         if form.is_valid():
-            patch = Patch(name=form.cleaned_data['name'], topic=form.cleaned_data['topic'])
+            patch = Patch(
+                name=form.cleaned_data['name'], topic=form.cleaned_data['topic']
+            )
             patch.set_modified()
             patch.save()
-            poc = PatchOnCommitFest(patch=patch, commitfest=cf, enterdate=datetime.now())
+            poc = PatchOnCommitFest(
+                patch=patch, commitfest=cf, enterdate=datetime.now()
+            )
             poc.save()
-            PatchHistory(patch=patch, by=request.user, what='Created patch record').save()
+            PatchHistory(
+                patch=patch, by=request.user, what='Created patch record'
+            ).save()
             # Now add the thread
             try:
-                doAttachThread(cf, patch, form.cleaned_data['threadmsgid'], request.user)
+                doAttachThread(
+                    cf, patch, form.cleaned_data['threadmsgid'], request.user
+                )
                 return HttpResponseRedirect("/%s/%s/edit/" % (cf.id, patch.id))
             except Http404:
                 # Thread not found!
                 # This is a horrible breakage of API layers
-                form._errors['threadmsgid'] = form.error_class(('Selected thread did not exist in the archives',))
+                form._errors['threadmsgid'] = form.error_class(
+                    ('Selected thread did not exist in the archives',)
+                )
             except Exception:
                 form._errors['threadmsgid'] = form.error_class(
                     ('An error occurred looking up the thread in the archives.',)
@@ -557,7 +607,9 @@ def comment(request, cfid, patchid, what):
         # We allow modification of patches in closed CFs *only* if it's the
         # last CF that the patch is part of. If it's part of another CF, that
         # is later than this one, tell the user to go there instead.
-        lastcf = PatchOnCommitFest.objects.filter(patch=patch).order_by('-commitfest__startdate')[0]
+        lastcf = PatchOnCommitFest.objects.filter(patch=patch).order_by(
+            '-commitfest__startdate'
+        )[0]
         if poc != lastcf:
             messages.add_message(
                 request,
@@ -571,21 +623,30 @@ def comment(request, cfid, patchid, what):
             form = CommentForm(patch, poc, is_review, data=request.POST)
         except Exception as e:
             messages.add_message(
-                request, messages.ERROR, "Failed to build list of response options from the archives: %s" % e
+                request,
+                messages.ERROR,
+                "Failed to build list of response options from the archives: %s" % e,
             )
             return HttpResponseRedirect('/%s/%s/' % (cf.id, patch.id))
 
         if form.is_valid():
             if is_review:
-                txt = "The following review has been posted through the commitfest application:\n%s\n\n%s" % (
-                    "\n".join(
-                        [
-                            "%-25s %s" % (f.label + ':', _review_status_string(form.cleaned_data[fn]))
-                            for (fn, f) in form.fields.items()
-                            if fn.startswith('review_')
-                        ]
-                    ),
-                    form.cleaned_data['message'],
+                txt = (
+                    "The following review has been posted through the commitfest application:\n%s\n\n%s"
+                    % (
+                        "\n".join(
+                            [
+                                "%-25s %s"
+                                % (
+                                    f.label + ':',
+                                    _review_status_string(form.cleaned_data[fn]),
+                                )
+                                for (fn, f) in form.fields.items()
+                                if fn.startswith('review_')
+                            ]
+                        ),
+                        form.cleaned_data['message'],
+                    )
                 )
             else:
                 txt = form.cleaned_data['message']
@@ -594,7 +655,9 @@ def comment(request, cfid, patchid, what):
                 poc.status = int(form.cleaned_data['newstatus'])
                 poc.save()
                 PatchHistory(
-                    patch=poc.patch, by=request.user, what='New status: %s' % poc.statusstring
+                    patch=poc.patch,
+                    by=request.user,
+                    what='New status: %s' % poc.statusstring,
                 ).save_and_notify()
                 txt += "\n\nThe new status of this patch is: %s\n" % poc.statusstring
 
@@ -611,7 +674,9 @@ def comment(request, cfid, patchid, what):
             # CC the authors of a patch, if there are any
             authors = list(patch.authors.all())
             if len(authors):
-                msg['Cc'] = ", ".join([UserWrapper(a).encoded_email_header for a in authors])
+                msg['Cc'] = ", ".join(
+                    [UserWrapper(a).encoded_email_header for a in authors]
+                )
 
             msg['Date'] = formatdate(localtime=True)
             msg['User-Agent'] = 'pgcommitfest'
@@ -632,13 +697,16 @@ def comment(request, cfid, patchid, what):
                 send_mail(uw.email, UserWrapper(a).email, msgstring)
 
             PatchHistory(
-                patch=patch, by=request.user, what='Posted %s with messageid %s' % (what, msg['Message-ID'])
+                patch=patch,
+                by=request.user,
+                what='Posted %s with messageid %s' % (what, msg['Message-ID']),
             ).save()
 
             messages.add_message(
                 request,
                 messages.INFO,
-                "Your email has been queued for %s, and will be sent within a few minutes." % (settings.HACKERS_EMAIL),
+                "Your email has been queued for %s, and will be sent within a few minutes."
+                % (settings.HACKERS_EMAIL),
             )
 
             return HttpResponseRedirect('/%s/%s/' % (cf.id, patch.id))
@@ -647,7 +715,9 @@ def comment(request, cfid, patchid, what):
             form = CommentForm(patch, poc, is_review)
         except Exception as e:
             messages.add_message(
-                request, messages.ERROR, "Failed to build list of response options from the archives: %s" % e
+                request,
+                messages.ERROR,
+                "Failed to build list of response options from the archives: %s" % e,
             )
             return HttpResponseRedirect('/%s/%s/' % (cf.id, patch.id))
 
@@ -674,13 +744,19 @@ def comment(request, cfid, patchid, what):
 @login_required
 @transaction.atomic
 def status(request, cfid, patchid, status):
-    poc = get_object_or_404(PatchOnCommitFest.objects.select_related(), commitfest__id=cfid, patch__id=patchid)
+    poc = get_object_or_404(
+        PatchOnCommitFest.objects.select_related(),
+        commitfest__id=cfid,
+        patch__id=patchid,
+    )
 
     if poc.is_closed:
         # We allow modification of patches in closed CFs *only* if it's the
         # last CF that the patch is part of. If it's part of another CF, that
         # is later than this one, tell the user to go there instead.
-        lastcf = PatchOnCommitFest.objects.filter(patch__id=patchid).order_by('-commitfest__startdate')[0]
+        lastcf = PatchOnCommitFest.objects.filter(patch__id=patchid).order_by(
+            '-commitfest__startdate'
+        )[0]
         if poc != lastcf:
             messages.add_message(
                 request,
@@ -705,7 +781,9 @@ def status(request, cfid, patchid, status):
         poc.patch.save()
         poc.save()
 
-        PatchHistory(patch=poc.patch, by=request.user, what='New status: %s' % poc.statusstring).save_and_notify()
+        PatchHistory(
+            patch=poc.patch, by=request.user, what='New status: %s' % poc.statusstring
+        ).save_and_notify()
 
     return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
 
@@ -713,13 +791,19 @@ def status(request, cfid, patchid, status):
 @login_required
 @transaction.atomic
 def close(request, cfid, patchid, status):
-    poc = get_object_or_404(PatchOnCommitFest.objects.select_related(), commitfest__id=cfid, patch__id=patchid)
+    poc = get_object_or_404(
+        PatchOnCommitFest.objects.select_related(),
+        commitfest__id=cfid,
+        patch__id=patchid,
+    )
 
     if poc.is_closed:
         # We allow modification of patches in closed CFs *only* if it's the
         # last CF that the patch is part of. If it's part of another CF, that
         # is later than this one, tell the user to go there instead.
-        lastcf = PatchOnCommitFest.objects.filter(patch__id=patchid).order_by('-commitfest__startdate')[0]
+        lastcf = PatchOnCommitFest.objects.filter(patch__id=patchid).order_by(
+            '-commitfest__startdate'
+        )[0]
         if poc != lastcf:
             messages.add_message(
                 request,
@@ -749,7 +833,10 @@ def close(request, cfid, patchid, status):
         ):
             # Can't be moved!
             messages.error(
-                request, "A patch in status {0} cannot be moved to next commitfest.".format(poc.statusstring)
+                request,
+                "A patch in status {0} cannot be moved to next commitfest.".format(
+                    poc.statusstring
+                ),
             )
             return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
         elif poc.status in (
@@ -773,10 +860,16 @@ def close(request, cfid, patchid, status):
             newcf = CommitFest.objects.filter(status=CommitFest.STATUS_FUTURE)
             if len(newcf) == 0:
                 messages.error(request, "No open and no future commitfest exists!")
-                return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+                return HttpResponseRedirect(
+                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                )
             elif len(newcf) != 1:
-                messages.error(request, "No open and multiple future commitfests exist!")
-                return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+                messages.error(
+                    request, "No open and multiple future commitfests exist!"
+                )
+                return HttpResponseRedirect(
+                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                )
         elif len(newcf) != 1:
             messages.error(request, "Multiple open commitfests exists!")
             return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
@@ -786,16 +879,29 @@ def close(request, cfid, patchid, status):
             # move it to.
             newcf = CommitFest.objects.filter(status=CommitFest.STATUS_FUTURE)
             if len(newcf) == 0:
-                messages.error(request, "Cannot move patch to the same commitfest, and no future commitfests exist!")
-                return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+                messages.error(
+                    request,
+                    "Cannot move patch to the same commitfest, and no future commitfests exist!",
+                )
+                return HttpResponseRedirect(
+                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                )
             elif len(newcf) != 1:
                 messages.error(
-                    request, "Cannot move patch to the same commitfest, and multiple future commitfests exist!"
+                    request,
+                    "Cannot move patch to the same commitfest, and multiple future commitfests exist!",
                 )
-                return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+                return HttpResponseRedirect(
+                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                )
         # Create a mapping to the new commitfest that we are bouncing
         # this patch to.
-        newpoc = PatchOnCommitFest(patch=poc.patch, commitfest=newcf[0], status=oldstatus, enterdate=datetime.now())
+        newpoc = PatchOnCommitFest(
+            patch=poc.patch,
+            commitfest=newcf[0],
+            status=oldstatus,
+            enterdate=datetime.now(),
+        )
         newpoc.save()
     elif status == 'committed':
         committer = get_object_or_404(Committer, user__username=request.GET['c'])
@@ -803,9 +909,11 @@ def close(request, cfid, patchid, status):
             # Committer changed!
             prevcommitter = poc.patch.committer
             poc.patch.committer = committer
-            PatchHistory(patch=poc.patch, by=request.user, what='Changed committer to %s' % committer).save_and_notify(
-                prevcommitter=prevcommitter
-            )
+            PatchHistory(
+                patch=poc.patch,
+                by=request.user,
+                what='Changed committer to %s' % committer,
+            ).save_and_notify(prevcommitter=prevcommitter)
         poc.status = PatchOnCommitFest.STATUS_COMMITTED
     else:
         raise Exception("Can't happen")
@@ -817,7 +925,8 @@ def close(request, cfid, patchid, status):
     PatchHistory(
         patch=poc.patch,
         by=request.user,
-        what='Closed in commitfest %s with status: %s' % (poc.commitfest, poc.statusstring),
+        what='Closed in commitfest %s with status: %s'
+        % (poc.commitfest, poc.statusstring),
     ).save_and_notify()
 
     return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
@@ -835,13 +944,17 @@ def reviewer(request, cfid, patchid, status):
         patch.reviewers.add(request.user)
         patch.set_modified()
         PatchHistory(
-            patch=patch, by=request.user, what='Added %s as reviewer' % request.user.username
+            patch=patch,
+            by=request.user,
+            what='Added %s as reviewer' % request.user.username,
         ).save_and_notify()
     elif status == 'remove' and is_reviewer:
         patch.reviewers.remove(request.user)
         patch.set_modified()
         PatchHistory(
-            patch=patch, by=request.user, what='Removed %s from reviewers' % request.user.username
+            patch=patch,
+            by=request.user,
+            what='Removed %s from reviewers' % request.user.username,
         ).save_and_notify()
     return HttpResponseRedirect('../../')
 
@@ -864,13 +977,17 @@ def committer(request, cfid, patchid, status):
         patch.committer = committer
         patch.set_modified()
         PatchHistory(
-            patch=patch, by=request.user, what='Added %s as committer' % request.user.username
+            patch=patch,
+            by=request.user,
+            what='Added %s as committer' % request.user.username,
         ).save_and_notify(prevcommitter=prevcommitter)
     elif status == 'remove' and is_committer:
         patch.committer = None
         patch.set_modified()
         PatchHistory(
-            patch=patch, by=request.user, what='Removed %s from committers' % request.user.username
+            patch=patch,
+            by=request.user,
+            what='Removed %s from committers' % request.user.username,
         ).save_and_notify(prevcommitter=prevcommitter)
     patch.save()
     return HttpResponseRedirect('../../')
@@ -908,7 +1025,9 @@ def send_email(request, cfid):
             if authoridstring:
                 q = q | Q(patch_author__in=[int(x) for x in authoridstring.split(',')])
             if revieweridstring:
-                q = q | Q(patch_reviewer__in=[int(x) for x in revieweridstring.split(',')])
+                q = q | Q(
+                    patch_reviewer__in=[int(x) for x in revieweridstring.split(',')]
+                )
 
             recipients = User.objects.filter(q).distinct()
 
@@ -920,29 +1039,45 @@ def send_email(request, cfid):
                     form.cleaned_data['body'],
                     request.user.username,
                 )
-                messages.add_message(request, messages.INFO, "Sent email to %s" % r.email)
+                messages.add_message(
+                    request, messages.INFO, "Sent email to %s" % r.email
+                )
             return HttpResponseRedirect('..')
     else:
         authoridstring = request.GET.get('authors', None)
         revieweridstring = request.GET.get('reviewers', None)
-        form = BulkEmailForm(initial={'authors': authoridstring, 'reviewers': revieweridstring})
+        form = BulkEmailForm(
+            initial={'authors': authoridstring, 'reviewers': revieweridstring}
+        )
 
     if authoridstring:
-        authors = list(User.objects.filter(patch_author__in=[int(x) for x in authoridstring.split(',')]).distinct())
+        authors = list(
+            User.objects.filter(
+                patch_author__in=[int(x) for x in authoridstring.split(',')]
+            ).distinct()
+        )
     else:
         authors = []
     if revieweridstring:
         reviewers = list(
-            User.objects.filter(patch_reviewer__in=[int(x) for x in revieweridstring.split(',')]).distinct()
+            User.objects.filter(
+                patch_reviewer__in=[int(x) for x in revieweridstring.split(',')]
+            ).distinct()
         )
     else:
         reviewers = []
 
     if len(authors) == 0 and len(reviewers) == 0:
-        messages.add_message(request, messages.WARNING, "No recipients specified, cannot send email")
+        messages.add_message(
+            request, messages.WARNING, "No recipients specified, cannot send email"
+        )
         return HttpResponseRedirect('..')
 
-    messages.add_message(request, messages.INFO, "Email will be sent from: %s" % UserWrapper(request.user).email)
+    messages.add_message(
+        request,
+        messages.INFO,
+        "Email will be sent from: %s" % UserWrapper(request.user).email,
+    )
 
     def _user_and_mail(u):
         return "%s %s (%s)" % (u.first_name, u.last_name, u.email)
@@ -951,13 +1086,15 @@ def send_email(request, cfid):
         messages.add_message(
             request,
             messages.INFO,
-            "The email will be sent to the following authors: %s" % ", ".join([_user_and_mail(u) for u in authors]),
+            "The email will be sent to the following authors: %s"
+            % ", ".join([_user_and_mail(u) for u in authors]),
         )
     if len(reviewers):
         messages.add_message(
             request,
             messages.INFO,
-            "The email will be sent to the following reviewers: %s" % ", ".join([_user_and_mail(u) for u in reviewers]),
+            "The email will be sent to the following reviewers: %s"
+            % ", ".join([_user_and_mail(u) for u in reviewers]),
         )
 
     return render(
@@ -1076,7 +1213,10 @@ def cfbot_ingest(message):
     # branch. This is fine, because doing so is very cheap in the no-op case
     # because we have an index on patch_id and there's only a handful of tasks
     # per patch.
-    cursor.execute("DELETE FROM commitfest_cfbottask WHERE patch_id=%s AND branch_id != %s", (patch_id, branch_id))
+    cursor.execute(
+        "DELETE FROM commitfest_cfbottask WHERE patch_id=%s AND branch_id != %s",
+        (patch_id, branch_id),
+    )
 
 
 @csrf_exempt

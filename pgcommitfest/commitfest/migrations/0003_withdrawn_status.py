@@ -39,5 +39,7 @@ INSERT INTO commitfest_patchstatus (status, statusstring, sortkey) VALUES
 (8,'Withdrawn', 50)
 ON CONFLICT (status) DO UPDATE SET statusstring=excluded.statusstring, sortkey=excluded.sortkey;
 """),
-        migrations.RunSQL("DELETE FROM commitfest_patchstatus WHERE status < 1 OR status > 8"),
+        migrations.RunSQL(
+            "DELETE FROM commitfest_patchstatus WHERE status < 1 OR status > 8"
+        ),
     ]

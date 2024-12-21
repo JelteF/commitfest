@@ -27,7 +27,10 @@ def _archivesAPI(suburl, params=None):
     try:
         resp = requests.get(
             "http{0}://{1}:{2}{3}".format(
-                settings.ARCHIVES_PORT == 443 and 's' or '', settings.ARCHIVES_SERVER, settings.ARCHIVES_PORT, suburl
+                settings.ARCHIVES_PORT == 443 and 's' or '',
+                settings.ARCHIVES_SERVER,
+                settings.ARCHIVES_PORT,
+                suburl,
             ),
             params=params,
             headers={
@@ -76,7 +79,9 @@ def getMessages(request):
 
 
 def refresh_single_thread(thread):
-    r = sorted(_archivesAPI('/message-id.json/%s' % thread.messageid), key=lambda x: x['date'])
+    r = sorted(
+        _archivesAPI('/message-id.json/%s' % thread.messageid), key=lambda x: x['date']
+    )
     if thread.latestmsgid != r[-1]['msgid']:
         # There is now a newer mail in the thread!
         thread.latestmsgid = r[-1]['msgid']
@@ -117,7 +122,10 @@ def annotateMessage(request):
 
             for p in thread.patches.all():
                 PatchHistory(
-                    patch=p, by=request.user, what='Added annotation "%s" to %s' % (textwrap.shorten(msg, 100), msgid)
+                    patch=p,
+                    by=request.user,
+                    what='Added annotation "%s" to %s'
+                    % (textwrap.shorten(msg, 100), msgid),
                 ).save_and_notify()
                 p.set_modified()
                 p.save()
@@ -134,7 +142,8 @@ def deleteAnnotation(request):
         PatchHistory(
             patch=p,
             by=request.user,
-            what='Deleted annotation "%s" from %s' % (annotation.annotationtext, annotation.msgid),
+            what='Deleted annotation "%s" from %s'
+            % (annotation.annotationtext, annotation.msgid),
         ).save_and_notify()
         p.set_modified()
         p.save()
@@ -212,7 +221,9 @@ def doAttachThread(cf, patch, msgid, user):
         m.save()
         parse_and_add_attachments(r, m)
 
-    PatchHistory(patch=patch, by=user, what='Attached mail thread %s' % r[0]['msgid']).save_and_notify()
+    PatchHistory(
+        patch=patch, by=user, what='Attached mail thread %s' % r[0]['msgid']
+    ).save_and_notify()
     patch.update_lastmail()
     patch.set_modified()
     patch.save()
@@ -227,7 +238,11 @@ def detachThread(request):
     thread = get_object_or_404(MailThread, messageid=request.POST['msg'])
 
     patch.mailthread_set.remove(thread)
-    PatchHistory(patch=patch, by=request.user, what='Detached mail thread %s' % request.POST['msg']).save_and_notify()
+    PatchHistory(
+        patch=patch,
+        by=request.user,
+        what='Detached mail thread %s' % request.POST['msg'],
+    ).save_and_notify()
     patch.update_lastmail()
     patch.set_modified()
     patch.save()

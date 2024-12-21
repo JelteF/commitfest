@@ -77,8 +77,12 @@ def login(request):
         # Now encrypt it
         r = Random.new()
         iv = r.read(16)
-        encryptor = AES.new(SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16], AES.MODE_CBC, iv)
-        cipher = encryptor.encrypt(s.encode('ascii') + b' ' * (16 - (len(s) % 16)))  # pad to 16 bytes
+        encryptor = AES.new(
+            SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16], AES.MODE_CBC, iv
+        )
+        cipher = encryptor.encrypt(
+            s.encode('ascii') + b' ' * (16 - (len(s) % 16))
+        )  # pad to 16 bytes
 
         return HttpResponseRedirect(
             "%s?d=%s$%s"
@@ -115,9 +119,15 @@ def auth_receive(request):
     # Set up an AES object and decrypt the data we received
     try:
         decryptor = AES.new(
-            base64.b64decode(settings.PGAUTH_KEY), AES.MODE_CBC, base64.b64decode(str(request.GET['i']), "-_")
+            base64.b64decode(settings.PGAUTH_KEY),
+            AES.MODE_CBC,
+            base64.b64decode(str(request.GET['i']), "-_"),
         )
-        s = decryptor.decrypt(base64.b64decode(str(request.GET['d']), "-_")).rstrip(b' ').decode('utf8')
+        s = (
+            decryptor.decrypt(base64.b64decode(str(request.GET['d']), "-_"))
+            .rstrip(b' ')
+            .decode('utf8')
+        )
     except UnicodeDecodeError:
         return HttpResponse("Badly encoded data found", 400)
     except Exception:
@@ -203,7 +213,9 @@ We apologize for the inconvenience.
 
     # Signal that we have information about this user
     auth_user_data_received.send(
-        sender=auth_receive, user=user, userdata={'secondaryemails': data['se'][0].split(',') if 'se' in data else []}
+        sender=auth_receive,
+        user=user,
+        userdata={'secondaryemails': data['se'][0].split(',') if 'se' in data else []},
     )
 
     # Finally, check of we have a data package that tells us where to
@@ -211,7 +223,9 @@ We apologize for the inconvenience.
     if 'd' in data:
         (ivs, datas) = data['d'][0].split('$')
         decryptor = AES.new(
-            SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16], AES.MODE_CBC, base64.b64decode(ivs, b"-_")
+            SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16],
+            AES.MODE_CBC,
+            base64.b64decode(ivs, b"-_"),
         )
         s = decryptor.decrypt(base64.b64decode(datas, "-_")).rstrip(b' ').decode('utf8')
         try:
@@ -224,7 +238,9 @@ We apologize for the inconvenience.
     # No redirect specified, see if we have it in our settings
     if hasattr(settings, 'PGAUTH_REDIRECT_SUCCESS'):
         return HttpResponseRedirect(settings.PGAUTH_REDIRECT_SUCCESS)
-    return HttpResponse("Authentication successful, but don't know where to redirect!", status=500)
+    return HttpResponse(
+        "Authentication successful, but don't know where to redirect!", status=500
+    )
 
 
 # Receive API calls from upstream, such as push changes to users
@@ -332,7 +348,9 @@ def user_search(searchterm=None, userid=None):
     (ivs, datas) = r.text.encode('utf8').split(b'&')
 
     # Decryption time
-    decryptor = AES.new(base64.b64decode(settings.PGAUTH_KEY), AES.MODE_CBC, base64.b64decode(ivs, "-_"))
+    decryptor = AES.new(
+        base64.b64decode(settings.PGAUTH_KEY), AES.MODE_CBC, base64.b64decode(ivs, "-_")
+    )
     s = decryptor.decrypt(base64.b64decode(datas, "-_")).rstrip(b' ').decode('utf8')
     j = json.loads(s)
 
