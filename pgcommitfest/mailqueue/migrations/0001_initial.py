@@ -9,20 +9,20 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='QueuedMail',
+            name="QueuedMail",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
-                        verbose_name='ID',
+                        verbose_name="ID",
                         serialize=False,
                         auto_created=True,
                         primary_key=True,
                     ),
                 ),
-                ('sender', models.EmailField(max_length=100)),
-                ('receiver', models.EmailField(max_length=100)),
-                ('fullmsg', models.TextField()),
+                ("sender", models.EmailField(max_length=100)),
+                ("receiver", models.EmailField(max_length=100)),
+                ("fullmsg", models.TextField()),
             ],
         ),
     ]

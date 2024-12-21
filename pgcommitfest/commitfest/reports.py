@@ -38,19 +38,19 @@ INNER JOIN auth_user u ON u.id=COALESCE(authors.userid, reviewers.userid)
 ORDER BY last_name, first_name
 """,
         {
-            'cid': cf.id,
+            "cid": cf.id,
         },
     )
 
     return render(
         request,
-        'report_authors.html',
+        "report_authors.html",
         {
-            'cf': cf,
-            'report': cursor.fetchall(),
-            'title': 'Author stats',
-            'breadcrumbs': [
-                {'title': cf.title, 'href': '/%s/' % cf.pk},
+            "cf": cf,
+            "report": cursor.fetchall(),
+            "title": "Author stats",
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
             ],
         },
     )

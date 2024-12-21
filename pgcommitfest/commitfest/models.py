@@ -29,7 +29,7 @@ class Committer(models.Model):
         )
 
     class Meta:
-        ordering = ('user__last_name', 'user__first_name')
+        ordering = ("user__last_name", "user__first_name")
 
 
 class CommitFest(models.Model):
@@ -38,10 +38,10 @@ class CommitFest(models.Model):
     STATUS_INPROGRESS = 3
     STATUS_CLOSED = 4
     _STATUS_CHOICES = (
-        (STATUS_FUTURE, 'Future'),
-        (STATUS_OPEN, 'Open'),
-        (STATUS_INPROGRESS, 'In Progress'),
-        (STATUS_CLOSED, 'Closed'),
+        (STATUS_FUTURE, "Future"),
+        (STATUS_OPEN, "Open"),
+        (STATUS_INPROGRESS, "In Progress"),
+        (STATUS_CLOSED, "Closed"),
     )
     name = models.CharField(max_length=100, blank=False, null=False, unique=True)
     status = models.IntegerField(
@@ -72,8 +72,8 @@ class CommitFest(models.Model):
         return self.name
 
     class Meta:
-        verbose_name_plural = 'Commitfests'
-        ordering = ('-startdate',)
+        verbose_name_plural = "Commitfests"
+        ordering = ("-startdate",)
 
 
 class Topic(models.Model):
@@ -88,7 +88,7 @@ class TargetVersion(models.Model):
 
     class Meta:
         ordering = [
-            '-version',
+            "-version",
         ]
 
     def __str__(self):
@@ -97,18 +97,18 @@ class TargetVersion(models.Model):
 
 class Patch(models.Model, DiffableModel):
     name = models.CharField(
-        max_length=500, blank=False, null=False, verbose_name='Description'
+        max_length=500, blank=False, null=False, verbose_name="Description"
     )
     topic = models.ForeignKey(Topic, blank=False, null=False, on_delete=models.CASCADE)
 
     # One patch can be in multiple commitfests, if it has history
-    commitfests = models.ManyToManyField(CommitFest, through='PatchOnCommitFest')
+    commitfests = models.ManyToManyField(CommitFest, through="PatchOnCommitFest")
 
     # If there is a wiki page discussing this patch
-    wikilink = models.URLField(blank=True, null=False, default='')
+    wikilink = models.URLField(blank=True, null=False, default="")
 
     # If there is a git repo about this patch
-    gitlink = models.URLField(blank=True, null=False, default='')
+    gitlink = models.URLField(blank=True, null=False, default="")
 
     # Version targeted by this patch
     targetversion = models.ForeignKey(
@@ -119,8 +119,8 @@ class Patch(models.Model, DiffableModel):
         on_delete=models.CASCADE,
     )
 
-    authors = models.ManyToManyField(User, related_name='patch_author', blank=True)
-    reviewers = models.ManyToManyField(User, related_name='patch_reviewer', blank=True)
+    authors = models.ManyToManyField(User, related_name="patch_author", blank=True)
+    reviewers = models.ManyToManyField(User, related_name="patch_reviewer", blank=True)
 
     committer = models.ForeignKey(
         Committer, blank=True, null=True, on_delete=models.CASCADE
@@ -128,7 +128,7 @@ class Patch(models.Model, DiffableModel):
 
     # Users to be notified when something happens
     subscribers = models.ManyToManyField(
-        User, related_name='patch_subscriber', blank=True
+        User, related_name="patch_subscriber", blank=True
     )
 
     # Datestamps for tracking activity
@@ -140,8 +140,8 @@ class Patch(models.Model, DiffableModel):
     lastmail = models.DateTimeField(blank=True, null=True)
 
     map_manytomany_for_diff = {
-        'authors': 'authors_string',
-        'reviewers': 'reviewers_string',
+        "authors": "authors_string",
+        "reviewers": "reviewers_string",
     }
 
     # Some accessors
@@ -167,7 +167,7 @@ class Patch(models.Model, DiffableModel):
     def history(self):
         # Need to wrap this in a function to make sure it calls
         # select_related() and doesn't generate a bazillion queries
-        return self.patchhistory_set.select_related('by').all()
+        return self.patchhistory_set.select_related("by").all()
 
     def set_modified(self, newmod=None):
         # Set the modified date to newmod, but only if that's newer than
@@ -191,7 +191,7 @@ class Patch(models.Model, DiffableModel):
         return self.name
 
     class Meta:
-        verbose_name_plural = 'patches'
+        verbose_name_plural = "patches"
 
 
 class PatchOnCommitFest(models.Model):
@@ -208,24 +208,24 @@ class PatchOnCommitFest(models.Model):
     STATUS_RETURNED = 7
     STATUS_WITHDRAWN = 8
     _STATUS_CHOICES = (
-        (STATUS_REVIEW, 'Needs review'),
-        (STATUS_AUTHOR, 'Waiting on Author'),
-        (STATUS_COMMITTER, 'Ready for Committer'),
-        (STATUS_COMMITTED, 'Committed'),
-        (STATUS_NEXT, 'Moved to next CF'),
-        (STATUS_REJECTED, 'Rejected'),
-        (STATUS_RETURNED, 'Returned with feedback'),
-        (STATUS_WITHDRAWN, 'Withdrawn'),
+        (STATUS_REVIEW, "Needs review"),
+        (STATUS_AUTHOR, "Waiting on Author"),
+        (STATUS_COMMITTER, "Ready for Committer"),
+        (STATUS_COMMITTED, "Committed"),
+        (STATUS_NEXT, "Moved to next CF"),
+        (STATUS_REJECTED, "Rejected"),
+        (STATUS_RETURNED, "Returned with feedback"),
+        (STATUS_WITHDRAWN, "Withdrawn"),
     )
     _STATUS_LABELS = (
-        (STATUS_REVIEW, 'default'),
-        (STATUS_AUTHOR, 'primary'),
-        (STATUS_COMMITTER, 'info'),
-        (STATUS_COMMITTED, 'success'),
-        (STATUS_NEXT, 'warning'),
-        (STATUS_REJECTED, 'danger'),
-        (STATUS_RETURNED, 'danger'),
-        (STATUS_WITHDRAWN, 'danger'),
+        (STATUS_REVIEW, "default"),
+        (STATUS_AUTHOR, "primary"),
+        (STATUS_COMMITTER, "info"),
+        (STATUS_COMMITTED, "success"),
+        (STATUS_NEXT, "warning"),
+        (STATUS_REJECTED, "danger"),
+        (STATUS_RETURNED, "danger"),
+        (STATUS_WITHDRAWN, "danger"),
     )
     OPEN_STATUSES = [STATUS_REVIEW, STATUS_AUTHOR, STATUS_COMMITTER]
 
@@ -255,11 +255,11 @@ class PatchOnCommitFest(models.Model):
     class Meta:
         unique_together = (
             (
-                'patch',
-                'commitfest',
+                "patch",
+                "commitfest",
             ),
         )
-        ordering = ('-commitfest__startdate',)
+        ordering = ("-commitfest__startdate",)
 
 
 class PatchHistory(models.Model):
@@ -278,7 +278,7 @@ class PatchHistory(models.Model):
         return "%s - %s" % (self.patch.name, self.date)
 
     class Meta:
-        ordering = ('-date',)
+        ordering = ("-date",)
 
     def save_and_notify(self, prevcommitter=None, prevreviewers=None, prevauthors=None):
         # Save this model, and then trigger notifications if there are any. There are
@@ -351,7 +351,7 @@ class MailThread(models.Model):
         return self.subject
 
     class Meta:
-        ordering = ('firstmessage',)
+        ordering = ("firstmessage",)
 
 
 class MailThreadAttachment(models.Model):
@@ -366,11 +366,11 @@ class MailThreadAttachment(models.Model):
     ispatch = models.BooleanField(null=True)
 
     class Meta:
-        ordering = ('-date',)
+        ordering = ("-date",)
         unique_together = (
             (
-                'mailthread',
-                'messageid',
+                "mailthread",
+                "messageid",
             ),
         )
 
@@ -396,7 +396,7 @@ class MailThreadAnnotation(models.Model):
         )
 
     class Meta:
-        ordering = ('date',)
+        ordering = ("date",)
 
 
 class PatchStatus(models.Model):
@@ -414,10 +414,10 @@ class PendingNotification(models.Model):
 
 class CfbotBranch(models.Model):
     STATUS_CHOICES = [
-        ('testing', 'Testing'),
-        ('finished', 'Finished'),
-        ('failed', 'Failed'),
-        ('timeout', 'Timeout'),
+        ("testing", "Testing"),
+        ("finished", "Finished"),
+        ("failed", "Failed"),
+        ("timeout", "Timeout"),
     ]
 
     patch = models.OneToOneField(
@@ -435,15 +435,15 @@ class CfbotBranch(models.Model):
 
 class CfbotTask(models.Model):
     STATUS_CHOICES = [
-        ('CREATED', 'Created'),
-        ('NEEDS_APPROVAL', 'Needs Approval'),
-        ('TRIGGERED', 'Triggered'),
-        ('EXECUTING', 'Executing'),
-        ('FAILED', 'Failed'),
-        ('COMPLETED', 'Completed'),
-        ('SCHEDULED', 'Scheduled'),
-        ('ABORTED', 'Aborted'),
-        ('ERRORED', 'Errored'),
+        ("CREATED", "Created"),
+        ("NEEDS_APPROVAL", "Needs Approval"),
+        ("TRIGGERED", "Triggered"),
+        ("EXECUTING", "Executing"),
+        ("FAILED", "Failed"),
+        ("COMPLETED", "Completed"),
+        ("SCHEDULED", "Scheduled"),
+        ("ABORTED", "Aborted"),
+        ("ERRORED", "Errored"),
     ]
 
     # This id is only used by Django. Using text type for primary keys, has

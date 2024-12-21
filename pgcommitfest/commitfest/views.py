@@ -44,14 +44,14 @@ def home(request):
 
     return render(
         request,
-        'home.html',
+        "home.html",
         {
-            'commitfests': commitfests,
-            'opencf': opencf,
-            'inprogresscf': inprogresscf,
-            'title': 'Commitfests',
-            'header_activity': 'Activity log',
-            'header_activity_link': '/activity/',
+            "commitfests": commitfests,
+            "opencf": opencf,
+            "inprogresscf": inprogresscf,
+            "title": "Commitfests",
+            "header_activity": "Activity log",
+            "header_activity_link": "/activity/",
         },
     )
 
@@ -70,12 +70,12 @@ def activity(request, cfid=None, rss=None):
         # we're evil.  And also because the number has been verified
         # when looking up the cf itself, so nothing can be injected
         # there.
-        where = 'WHERE EXISTS (SELECT 1 FROM commitfest_patchoncommitfest poc2 WHERE poc2.patch_id=p.id AND poc2.commitfest_id={0})'.format(
+        where = "WHERE EXISTS (SELECT 1 FROM commitfest_patchoncommitfest poc2 WHERE poc2.patch_id=p.id AND poc2.commitfest_id={0})".format(
             cf.id
         )
     else:
         cf = None
-        where = ''
+        where = ""
 
     sql = "SELECT ph.date, auth_user.username AS by, ph.what, p.id AS patchid, p.name, (SELECT max(commitfest_id) FROM commitfest_patchoncommitfest poc WHERE poc.patch_id=p.id) AS cfid FROM commitfest_patchhistory ph INNER JOIN commitfest_patch p ON ph.patch_id=p.id INNER JOIN auth_user on auth_user.id=ph.by_id {0} ORDER BY ph.date DESC LIMIT {1}".format(
         where, num
@@ -92,18 +92,18 @@ def activity(request, cfid=None, rss=None):
         # Return regular webpage
         return render(
             request,
-            'activity.html',
+            "activity.html",
             {
-                'commitfest': cf,
-                'activity': activity,
-                'title': cf and 'Commitfest activity' or 'Global Commitfest activity',
-                'rss_alternate': cf
-                and '/{0}/activity.rss/'.format(cf.id)
-                or '/activity.rss/',
-                'rss_alternate_title': 'PostgreSQL Commitfest Activity Log',
-                'breadcrumbs': cf
+                "commitfest": cf,
+                "activity": activity,
+                "title": cf and "Commitfest activity" or "Global Commitfest activity",
+                "rss_alternate": cf
+                and "/{0}/activity.rss/".format(cf.id)
+                or "/activity.rss/",
+                "rss_alternate_title": "PostgreSQL Commitfest Activity Log",
+                "breadcrumbs": cf
                 and [
-                    {'title': cf.title, 'href': '/%s/' % cf.pk},
+                    {"title": cf.title, "href": "/%s/" % cf.pk},
                 ]
                 or None,
             },
@@ -111,11 +111,11 @@ def activity(request, cfid=None, rss=None):
 
 
 def redir(request, what, end):
-    if what == 'open':
+    if what == "open":
         cfs = list(CommitFest.objects.filter(status=CommitFest.STATUS_OPEN))
-    elif what == 'inprogress':
+    elif what == "inprogress":
         cfs = list(CommitFest.objects.filter(status=CommitFest.STATUS_INPROGRESS))
-    elif what == 'current':
+    elif what == "current":
         cfs = list(CommitFest.objects.filter(status=CommitFest.STATUS_INPROGRESS))
         if len(cfs) == 0:
             cfs = list(CommitFest.objects.filter(status=CommitFest.STATUS_OPEN))
@@ -138,7 +138,7 @@ def redir(request, what, end):
 
     query_string = request.GET.urlencode()
     if query_string:
-        query_string = '?' + query_string
+        query_string = "?" + query_string
     return HttpResponseRedirect(f"/{cfs[0].id}/{end}{query_string}")
 
 
@@ -149,43 +149,43 @@ def commitfest(request, cfid):
     # Build a dynamic filter based on the filtering options entered
     whereclauses = []
     whereparams = {}
-    if request.GET.get('status', '-1') != '-1':
+    if request.GET.get("status", "-1") != "-1":
         try:
-            whereparams['status'] = int(request.GET['status'])
+            whereparams["status"] = int(request.GET["status"])
             whereclauses.append("poc.status=%(status)s")
         except ValueError:
             # int() failed -- so just ignore this filter
             pass
 
-    if request.GET.get('targetversion', '-1') != '-1':
-        if request.GET['targetversion'] == '-2':
+    if request.GET.get("targetversion", "-1") != "-1":
+        if request.GET["targetversion"] == "-2":
             whereclauses.append("targetversion_id IS NULL")
         else:
             try:
-                whereparams['verid'] = int(request.GET['targetversion'])
+                whereparams["verid"] = int(request.GET["targetversion"])
                 whereclauses.append("targetversion_id=%(verid)s")
             except ValueError:
                 # int() failed, ignore
                 pass
 
-    if request.GET.get('author', '-1') != '-1':
-        if request.GET['author'] == '-2':
+    if request.GET.get("author", "-1") != "-1":
+        if request.GET["author"] == "-2":
             whereclauses.append(
                 "NOT EXISTS (SELECT 1 FROM commitfest_patch_authors cpa WHERE cpa.patch_id=p.id)"
             )
-        elif request.GET['author'] == '-3':
+        elif request.GET["author"] == "-3":
             # Checking for "yourself" requires the user to be logged in!
             if not request.user.is_authenticated:
                 return HttpResponseRedirect(
-                    '%s?next=%s' % (settings.LOGIN_URL, request.path)
+                    "%s?next=%s" % (settings.LOGIN_URL, request.path)
                 )
             whereclauses.append(
                 "EXISTS (SELECT 1 FROM commitfest_patch_authors cpa WHERE cpa.patch_id=p.id AND cpa.user_id=%(self)s)"
             )
-            whereparams['self'] = request.user.id
+            whereparams["self"] = request.user.id
         else:
             try:
-                whereparams['author'] = int(request.GET['author'])
+                whereparams["author"] = int(request.GET["author"])
                 whereclauses.append(
                     "EXISTS (SELECT 1 FROM commitfest_patch_authors cpa WHERE cpa.patch_id=p.id AND cpa.user_id=%(author)s)"
                 )
@@ -193,24 +193,24 @@ def commitfest(request, cfid):
                 # int() failed -- so just ignore this filter
                 pass
 
-    if request.GET.get('reviewer', '-1') != '-1':
-        if request.GET['reviewer'] == '-2':
+    if request.GET.get("reviewer", "-1") != "-1":
+        if request.GET["reviewer"] == "-2":
             whereclauses.append(
                 "NOT EXISTS (SELECT 1 FROM commitfest_patch_reviewers cpr WHERE cpr.patch_id=p.id)"
             )
-        elif request.GET['reviewer'] == '-3':
+        elif request.GET["reviewer"] == "-3":
             # Checking for "yourself" requires the user to be logged in!
             if not request.user.is_authenticated:
                 return HttpResponseRedirect(
-                    '%s?next=%s' % (settings.LOGIN_URL, request.path)
+                    "%s?next=%s" % (settings.LOGIN_URL, request.path)
                 )
             whereclauses.append(
                 "EXISTS (SELECT 1 FROM commitfest_patch_reviewers cpr WHERE cpr.patch_id=p.id AND cpr.user_id=%(self)s)"
             )
-            whereparams['self'] = request.user.id
+            whereparams["self"] = request.user.id
         else:
             try:
-                whereparams['reviewer'] = int(request.GET['reviewer'])
+                whereparams["reviewer"] = int(request.GET["reviewer"])
                 whereclauses.append(
                     "EXISTS (SELECT 1 FROM commitfest_patch_reviewers cpr WHERE cpr.patch_id=p.id AND cpr.user_id=%(reviewer)s)"
                 )
@@ -218,43 +218,43 @@ def commitfest(request, cfid):
                 # int() failed -- so just ignore this filter
                 pass
 
-    if request.GET.get('text', '') != '':
+    if request.GET.get("text", "") != "":
         whereclauses.append("p.name ILIKE '%%' || %(txt)s || '%%'")
-        whereparams['txt'] = request.GET['text']
+        whereparams["txt"] = request.GET["text"]
 
     has_filter = len(whereclauses) > 0
 
     # Figure out custom ordering
-    if request.GET.get('sortkey', '') != '':
+    if request.GET.get("sortkey", "") != "":
         try:
-            sortkey = int(request.GET['sortkey'])
+            sortkey = int(request.GET["sortkey"])
         except ValueError:
             sortkey = 0
 
         if sortkey == 1:
-            orderby_str = 'modified, created'
+            orderby_str = "modified, created"
         elif sortkey == 2:
-            orderby_str = 'lastmail, created'
+            orderby_str = "lastmail, created"
         elif sortkey == 3:
-            orderby_str = 'num_cfs DESC, modified, created'
+            orderby_str = "num_cfs DESC, modified, created"
         else:
-            orderby_str = 'p.id'
+            orderby_str = "p.id"
             sortkey = 0
     else:
-        orderby_str = 'topic, created'
+        orderby_str = "topic, created"
         sortkey = 0
 
     if not has_filter and sortkey == 0 and request.GET:
         # Redirect to get rid of the ugly url
-        return HttpResponseRedirect('/%s/' % cf.id)
+        return HttpResponseRedirect("/%s/" % cf.id)
 
     if whereclauses:
-        where_str = 'AND ({0})'.format(' AND '.join(whereclauses))
+        where_str = "AND ({0})".format(" AND ".join(whereclauses))
     else:
-        where_str = ''
+        where_str = ""
     params = {
-        'cid': cf.id,
-        'openstatuses': PatchOnCommitFest.OPEN_STATUSES,
+        "cid": cf.id,
+        "openstatuses": PatchOnCommitFest.OPEN_STATUSES,
     }
     params.update(whereparams)
 
@@ -301,11 +301,11 @@ ORDER BY is_open DESC, {1}""".format(where_str, orderby_str),
     curs.execute(
         "SELECT ps.status, ps.statusstring, count(*) FROM commitfest_patchoncommitfest poc INNER JOIN commitfest_patchstatus ps ON ps.status=poc.status WHERE commitfest_id=%(id)s GROUP BY ps.status ORDER BY ps.sortkey",
         {
-            'id': cf.id,
+            "id": cf.id,
         },
     )
     statussummary = curs.fetchall()
-    statussummary.append([-1, 'Total', sum((r[2] for r in statussummary))])
+    statussummary.append([-1, "Total", sum((r[2] for r in statussummary))])
 
     # Generates a fairly expensive query, which we shouldn't do unless
     # the user is logged in. XXX: Figure out how to avoid doing that..
@@ -313,19 +313,19 @@ ORDER BY is_open DESC, {1}""".format(where_str, orderby_str),
 
     return render(
         request,
-        'commitfest.html',
+        "commitfest.html",
         {
-            'cf': cf,
-            'form': form,
-            'patches': patches,
-            'statussummary': statussummary,
-            'has_filter': has_filter,
-            'title': cf.title,
-            'grouping': sortkey == 0,
-            'sortkey': sortkey,
-            'openpatchids': [p['id'] for p in patches if p['is_open']],
-            'header_activity': 'Activity log',
-            'header_activity_link': 'activity/',
+            "cf": cf,
+            "form": form,
+            "patches": patches,
+            "statussummary": statussummary,
+            "has_filter": has_filter,
+            "title": cf.title,
+            "grouping": sortkey == 0,
+            "sortkey": sortkey,
+            "openpatchids": [p["id"] for p in patches if p["is_open"]],
+            "header_activity": "Activity log",
+            "header_activity_link": "activity/",
         },
     )
 
@@ -336,7 +336,7 @@ def patches_by_messageid(messageid):
         Patch.objects.select_related()
         .filter(mailthread__messageid=messageid)
         .order_by(
-            'created',
+            "created",
         )
         .all()
     )
@@ -347,35 +347,35 @@ def patches_by_messageid(messageid):
 
     # If it's not there, try to find it in the archives
     try:
-        thread = _archivesAPI(f'/message-id.json/{urlsafe_messageid}')
+        thread = _archivesAPI(f"/message-id.json/{urlsafe_messageid}")
     except Http404:
         return []
 
     if len(thread) == 0:
         return []
 
-    first_email = min(thread, key=lambda x: x['date'])
+    first_email = min(thread, key=lambda x: x["date"])
 
     return (
         Patch.objects.select_related()
-        .filter(mailthread__messageid=first_email['msgid'])
+        .filter(mailthread__messageid=first_email["msgid"])
         .order_by(
-            'created',
+            "created",
         )
         .all()
     )
 
 
 def global_search(request):
-    if 'searchterm' not in request.GET:
-        return HttpResponseRedirect('/')
-    searchterm = request.GET['searchterm'].strip()
+    if "searchterm" not in request.GET:
+        return HttpResponseRedirect("/")
+    searchterm = request.GET["searchterm"].strip()
     patches = []
 
-    if '@' in searchterm:
+    if "@" in searchterm:
         # This is probably a messageid, so let's try to look up patches related
         # to it. Let's first remove any < and > around it though.
-        cleaned_id = searchterm.removeprefix('<').removesuffix('>')
+        cleaned_id = searchterm.removeprefix("<").removesuffix(">")
         patches = patches_by_messageid(cleaned_id)
 
     if not patches:
@@ -383,35 +383,35 @@ def global_search(request):
             Patch.objects.select_related()
             .filter(name__icontains=searchterm)
             .order_by(
-                'created',
+                "created",
             )
             .all()
         )
 
     if len(patches) == 1:
         patch = patches[0]
-        return HttpResponseRedirect(f'/patch/{patch.id}/')
+        return HttpResponseRedirect(f"/patch/{patch.id}/")
 
     return render(
         request,
-        'patchsearch.html',
+        "patchsearch.html",
         {
-            'patches': patches,
-            'title': 'Patch search results',
+            "patches": patches,
+            "title": "Patch search results",
         },
     )
 
 
 def patch_redirect(request, patchid):
     last_commitfest = (
-        PatchOnCommitFest.objects.select_related('commitfest')
+        PatchOnCommitFest.objects.select_related("commitfest")
         .filter(patch_id=patchid)
-        .order_by('-commitfest__startdate')
+        .order_by("-commitfest__startdate")
         .first()
     )
     if not last_commitfest:
         raise Http404("Patch not found")
-    return HttpResponseRedirect(f'/{last_commitfest.commitfest_id}/{patchid}/')
+    return HttpResponseRedirect(f"/{last_commitfest.commitfest_id}/{patchid}/")
 
 
 def patch(request, cfid, patchid):
@@ -420,16 +420,16 @@ def patch(request, cfid, patchid):
         Patch.objects.select_related(), pk=patchid, commitfests=cf
     )
     patch_commitfests = (
-        PatchOnCommitFest.objects.select_related('commitfest')
+        PatchOnCommitFest.objects.select_related("commitfest")
         .filter(patch=patch)
-        .order_by('-commitfest__startdate')
+        .order_by("-commitfest__startdate")
     )
     committers = Committer.objects.filter(active=True).order_by(
-        'user__last_name', 'user__first_name'
+        "user__last_name", "user__first_name"
     )
 
-    cfbot_branch = getattr(patch, 'cfbot_branch', None)
-    cfbot_tasks = patch.cfbot_tasks.order_by('position') if cfbot_branch else []
+    cfbot_branch = getattr(patch, "cfbot_branch", None)
+    cfbot_tasks = patch.cfbot_tasks.order_by("position") if cfbot_branch else []
 
     # XXX: this creates a session, so find a smarter way. Probably handle
     # it in the callback and just ask the user then?
@@ -451,22 +451,22 @@ def patch(request, cfid, patchid):
 
     return render(
         request,
-        'patch.html',
+        "patch.html",
         {
-            'cf': cf,
-            'patch': patch,
-            'patch_commitfests': patch_commitfests,
-            'cfbot_branch': cfbot_branch,
-            'cfbot_tasks': cfbot_tasks,
-            'is_committer': is_committer,
-            'is_this_committer': is_this_committer,
-            'is_reviewer': is_reviewer,
-            'is_subscribed': is_subscribed,
-            'committers': committers,
-            'attachnow': 'attachthreadnow' in request.GET,
-            'title': patch.name,
-            'breadcrumbs': [
-                {'title': cf.title, 'href': '/%s/' % cf.pk},
+            "cf": cf,
+            "patch": patch,
+            "patch_commitfests": patch_commitfests,
+            "cfbot_branch": cfbot_branch,
+            "cfbot_tasks": cfbot_tasks,
+            "is_committer": is_committer,
+            "is_this_committer": is_this_committer,
+            "is_reviewer": is_reviewer,
+            "is_subscribed": is_subscribed,
+            "committers": committers,
+            "attachnow": "attachthreadnow" in request.GET,
+            "title": patch.name,
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
             ],
         },
     )
@@ -482,7 +482,7 @@ def patchform(request, cfid, patchid):
     prevauthors = list(patch.authors.all())
     prevcommitter = patch.committer
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = PatchForm(data=request.POST, instance=patch)
         if form.is_valid():
             # Some fields need to be set when creating a new one
@@ -496,7 +496,7 @@ def patchform(request, cfid, patchid):
                 PatchHistory(
                     patch=patch,
                     by=request.user,
-                    what='Changed %s to %s' % (field, values[1]),
+                    what="Changed %s to %s" % (field, values[1]),
                 ).save_and_notify(
                     prevcommitter=prevcommitter,
                     prevreviewers=prevreviewers,
@@ -504,23 +504,23 @@ def patchform(request, cfid, patchid):
                 )
             r.set_modified()
             r.save()
-            return HttpResponseRedirect('../../%s/' % r.pk)
+            return HttpResponseRedirect("../../%s/" % r.pk)
         # Else fall through and render the page again
     else:
         form = PatchForm(instance=patch)
 
     return render(
         request,
-        'base_form.html',
+        "base_form.html",
         {
-            'cf': cf,
-            'form': form,
-            'patch': patch,
-            'title': 'Edit patch',
-            'selectize_multiple_fields': form.selectize_multiple_fields.items(),
-            'breadcrumbs': [
-                {'title': cf.title, 'href': '/%s/' % cf.pk},
-                {'title': 'View patch', 'href': '/%s/%s/' % (cf.pk, patch.pk)},
+            "cf": cf,
+            "form": form,
+            "patch": patch,
+            "title": "Edit patch",
+            "selectize_multiple_fields": form.selectize_multiple_fields.items(),
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
+                {"title": "View patch", "href": "/%s/%s/" % (cf.pk, patch.pk)},
             ],
         },
     )
@@ -533,11 +533,11 @@ def newpatch(request, cfid):
     if not cf.status == CommitFest.STATUS_OPEN and not request.user.is_staff:
         raise Http404("This commitfest is not open!")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         form = NewPatchForm(data=request.POST)
         if form.is_valid():
             patch = Patch(
-                name=form.cleaned_data['name'], topic=form.cleaned_data['topic']
+                name=form.cleaned_data["name"], topic=form.cleaned_data["topic"]
             )
             patch.set_modified()
             patch.save()
@@ -546,23 +546,23 @@ def newpatch(request, cfid):
             )
             poc.save()
             PatchHistory(
-                patch=patch, by=request.user, what='Created patch record'
+                patch=patch, by=request.user, what="Created patch record"
             ).save()
             # Now add the thread
             try:
                 doAttachThread(
-                    cf, patch, form.cleaned_data['threadmsgid'], request.user
+                    cf, patch, form.cleaned_data["threadmsgid"], request.user
                 )
                 return HttpResponseRedirect("/%s/%s/edit/" % (cf.id, patch.id))
             except Http404:
                 # Thread not found!
                 # This is a horrible breakage of API layers
-                form._errors['threadmsgid'] = form.error_class(
-                    ('Selected thread did not exist in the archives',)
+                form._errors["threadmsgid"] = form.error_class(
+                    ("Selected thread did not exist in the archives",)
                 )
             except Exception:
-                form._errors['threadmsgid'] = form.error_class(
-                    ('An error occurred looking up the thread in the archives.',)
+                form._errors["threadmsgid"] = form.error_class(
+                    ("An error occurred looking up the thread in the archives.",)
                 )
             # In this case, we have created a patch - delete it. This causes a agp in id's, but it should
             # not happen very often. If we successfully attached to it, we will have already returned.
@@ -572,22 +572,22 @@ def newpatch(request, cfid):
 
     return render(
         request,
-        'base_form.html',
+        "base_form.html",
         {
-            'form': form,
-            'title': 'New patch',
-            'breadcrumbs': [
-                {'title': cf.title, 'href': '/%s/' % cf.pk},
+            "form": form,
+            "title": "New patch",
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
             ],
-            'savebutton': 'Create patch',
-            'threadbrowse': True,
+            "savebutton": "Create patch",
+            "threadbrowse": True,
         },
     )
 
 
 def _review_status_string(reviewstatus):
-    if '0' in reviewstatus:
-        if '1' in reviewstatus:
+    if "0" in reviewstatus:
+        if "1" in reviewstatus:
             return "tested, passed"
         else:
             return "tested, failed"
@@ -601,14 +601,14 @@ def comment(request, cfid, patchid, what):
     cf = get_object_or_404(CommitFest, pk=cfid)
     patch = get_object_or_404(Patch, pk=patchid)
     poc = get_object_or_404(PatchOnCommitFest, patch=patch, commitfest=cf)
-    is_review = what == 'review'
+    is_review = what == "review"
 
     if poc.is_closed:
         # We allow modification of patches in closed CFs *only* if it's the
         # last CF that the patch is part of. If it's part of another CF, that
         # is later than this one, tell the user to go there instead.
         lastcf = PatchOnCommitFest.objects.filter(patch=patch).order_by(
-            '-commitfest__startdate'
+            "-commitfest__startdate"
         )[0]
         if poc != lastcf:
             messages.add_message(
@@ -616,9 +616,9 @@ def comment(request, cfid, patchid, what):
                 messages.INFO,
                 "The status of this patch cannot be changed in this commitfest. You must modify it in the one where it's open!",
             )
-            return HttpResponseRedirect('..')
+            return HttpResponseRedirect("..")
 
-    if request.method == 'POST':
+    if request.method == "POST":
         try:
             form = CommentForm(patch, poc, is_review, data=request.POST)
         except Exception as e:
@@ -627,7 +627,7 @@ def comment(request, cfid, patchid, what):
                 messages.ERROR,
                 "Failed to build list of response options from the archives: %s" % e,
             )
-            return HttpResponseRedirect('/%s/%s/' % (cf.id, patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (cf.id, patch.id))
 
         if form.is_valid():
             if is_review:
@@ -638,55 +638,55 @@ def comment(request, cfid, patchid, what):
                             [
                                 "%-25s %s"
                                 % (
-                                    f.label + ':',
+                                    f.label + ":",
                                     _review_status_string(form.cleaned_data[fn]),
                                 )
                                 for (fn, f) in form.fields.items()
-                                if fn.startswith('review_')
+                                if fn.startswith("review_")
                             ]
                         ),
-                        form.cleaned_data['message'],
+                        form.cleaned_data["message"],
                     )
                 )
             else:
-                txt = form.cleaned_data['message']
+                txt = form.cleaned_data["message"]
 
-            if int(form.cleaned_data['newstatus']) != poc.status:
-                poc.status = int(form.cleaned_data['newstatus'])
+            if int(form.cleaned_data["newstatus"]) != poc.status:
+                poc.status = int(form.cleaned_data["newstatus"])
                 poc.save()
                 PatchHistory(
                     patch=poc.patch,
                     by=request.user,
-                    what='New status: %s' % poc.statusstring,
+                    what="New status: %s" % poc.statusstring,
                 ).save_and_notify()
                 txt += "\n\nThe new status of this patch is: %s\n" % poc.statusstring
 
-            msg = MIMEText(txt, _charset='utf-8')
+            msg = MIMEText(txt, _charset="utf-8")
 
-            if form.thread.subject.startswith('Re:'):
-                msg['Subject'] = form.thread.subject
+            if form.thread.subject.startswith("Re:"):
+                msg["Subject"] = form.thread.subject
             else:
-                msg['Subject'] = 'Re: %s' % form.thread.subject
+                msg["Subject"] = "Re: %s" % form.thread.subject
 
-            msg['To'] = settings.HACKERS_EMAIL
-            msg['From'] = UserWrapper(request.user).encoded_email_header
+            msg["To"] = settings.HACKERS_EMAIL
+            msg["From"] = UserWrapper(request.user).encoded_email_header
 
             # CC the authors of a patch, if there are any
             authors = list(patch.authors.all())
             if len(authors):
-                msg['Cc'] = ", ".join(
+                msg["Cc"] = ", ".join(
                     [UserWrapper(a).encoded_email_header for a in authors]
                 )
 
-            msg['Date'] = formatdate(localtime=True)
-            msg['User-Agent'] = 'pgcommitfest'
-            msg['X-cfsender'] = request.user.username
-            msg['In-Reply-To'] = '<%s>' % form.respid
+            msg["Date"] = formatdate(localtime=True)
+            msg["User-Agent"] = "pgcommitfest"
+            msg["X-cfsender"] = request.user.username
+            msg["In-Reply-To"] = "<%s>" % form.respid
             # We just add the "top" messageid and the one we're responding to.
             # This along with in-reply-to should indicate clearly enough where
             # in the thread the message belongs.
-            msg['References'] = '<%s> <%s>' % (form.thread.messageid, form.respid)
-            msg['Message-ID'] = make_msgid('pgcf')
+            msg["References"] = "<%s> <%s>" % (form.thread.messageid, form.respid)
+            msg["Message-ID"] = make_msgid("pgcf")
 
             uw = UserWrapper(request.user)
             msgstring = msg.as_string()
@@ -699,7 +699,7 @@ def comment(request, cfid, patchid, what):
             PatchHistory(
                 patch=patch,
                 by=request.user,
-                what='Posted %s with messageid %s' % (what, msg['Message-ID']),
+                what="Posted %s with messageid %s" % (what, msg["Message-ID"]),
             ).save()
 
             messages.add_message(
@@ -709,7 +709,7 @@ def comment(request, cfid, patchid, what):
                 % (settings.HACKERS_EMAIL),
             )
 
-            return HttpResponseRedirect('/%s/%s/' % (cf.id, patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (cf.id, patch.id))
     else:
         try:
             form = CommentForm(patch, poc, is_review)
@@ -719,24 +719,24 @@ def comment(request, cfid, patchid, what):
                 messages.ERROR,
                 "Failed to build list of response options from the archives: %s" % e,
             )
-            return HttpResponseRedirect('/%s/%s/' % (cf.id, patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (cf.id, patch.id))
 
     return render(
         request,
-        'base_form.html',
+        "base_form.html",
         {
-            'cf': cf,
-            'form': form,
-            'patch': patch,
-            'extraformclass': 'patchcommentform',
-            'breadcrumbs': [
-                {'title': cf.title, 'href': '/%s/' % cf.pk},
-                {'title': 'View patch', 'href': '/%s/%s/' % (cf.pk, patch.pk)},
+            "cf": cf,
+            "form": form,
+            "patch": patch,
+            "extraformclass": "patchcommentform",
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
+                {"title": "View patch", "href": "/%s/%s/" % (cf.pk, patch.pk)},
             ],
-            'title': "Add %s" % what,
-            'note': '<b>Note!</b> This form will generate an email to the public mailinglist <i>%s</i>, with sender set to <i>%s</i>!<br/>Please ensure that the email settings for your domain (<a href="https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail" target="_blank">DKIM</a>, <a href="https://en.wikipedia.org/wiki/SPF" target="_blank">SPF</a>) allow emails from external sources.'
+            "title": "Add %s" % what,
+            "note": '<b>Note!</b> This form will generate an email to the public mailinglist <i>%s</i>, with sender set to <i>%s</i>!<br/>Please ensure that the email settings for your domain (<a href="https://en.wikipedia.org/wiki/DomainKeys_Identified_Mail" target="_blank">DKIM</a>, <a href="https://en.wikipedia.org/wiki/SPF" target="_blank">SPF</a>) allow emails from external sources.'
             % (settings.HACKERS_EMAIL, UserWrapper(request.user).email),
-            'savebutton': 'Send %s' % what,
+            "savebutton": "Send %s" % what,
         },
     )
 
@@ -755,7 +755,7 @@ def status(request, cfid, patchid, status):
         # last CF that the patch is part of. If it's part of another CF, that
         # is later than this one, tell the user to go there instead.
         lastcf = PatchOnCommitFest.objects.filter(patch__id=patchid).order_by(
-            '-commitfest__startdate'
+            "-commitfest__startdate"
         )[0]
         if poc != lastcf:
             messages.add_message(
@@ -763,13 +763,13 @@ def status(request, cfid, patchid, status):
                 messages.INFO,
                 "The status of this patch cannot be changed in this commitfest. You must modify it in the one where it's open!",
             )
-            return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (poc.commitfest.id, poc.patch.id))
 
-    if status == 'review':
+    if status == "review":
         newstatus = PatchOnCommitFest.STATUS_REVIEW
-    elif status == 'author':
+    elif status == "author":
         newstatus = PatchOnCommitFest.STATUS_AUTHOR
-    elif status == 'committer':
+    elif status == "committer":
         newstatus = PatchOnCommitFest.STATUS_COMMITTER
     else:
         raise Exception("Can't happen")
@@ -782,10 +782,10 @@ def status(request, cfid, patchid, status):
         poc.save()
 
         PatchHistory(
-            patch=poc.patch, by=request.user, what='New status: %s' % poc.statusstring
+            patch=poc.patch, by=request.user, what="New status: %s" % poc.statusstring
         ).save_and_notify()
 
-    return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+    return HttpResponseRedirect("/%s/%s/" % (poc.commitfest.id, poc.patch.id))
 
 
 @login_required
@@ -802,7 +802,7 @@ def close(request, cfid, patchid, status):
         # last CF that the patch is part of. If it's part of another CF, that
         # is later than this one, tell the user to go there instead.
         lastcf = PatchOnCommitFest.objects.filter(patch__id=patchid).order_by(
-            '-commitfest__startdate'
+            "-commitfest__startdate"
         )[0]
         if poc != lastcf:
             messages.add_message(
@@ -810,20 +810,20 @@ def close(request, cfid, patchid, status):
                 messages.INFO,
                 "The status of this patch cannot be changed in this commitfest. You must modify it in the one where it's open!",
             )
-            return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (poc.commitfest.id, poc.patch.id))
 
     poc.leavedate = datetime.now()
 
     # We know the status can't be one of the ones below, since we
     # have checked that we're not closed yet. Therefor, we don't
     # need to check if the individual status has changed.
-    if status == 'reject':
+    if status == "reject":
         poc.status = PatchOnCommitFest.STATUS_REJECTED
-    elif status == 'withdrawn':
+    elif status == "withdrawn":
         poc.status = PatchOnCommitFest.STATUS_WITHDRAWN
-    elif status == 'feedback':
+    elif status == "feedback":
         poc.status = PatchOnCommitFest.STATUS_RETURNED
-    elif status == 'next':
+    elif status == "next":
         # Only some patch statuses can actually be moved.
         if poc.status in (
             PatchOnCommitFest.STATUS_COMMITTED,
@@ -838,7 +838,7 @@ def close(request, cfid, patchid, status):
                     poc.statusstring
                 ),
             )
-            return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (poc.commitfest.id, poc.patch.id))
         elif poc.status in (
             PatchOnCommitFest.STATUS_REVIEW,
             PatchOnCommitFest.STATUS_AUTHOR,
@@ -861,18 +861,18 @@ def close(request, cfid, patchid, status):
             if len(newcf) == 0:
                 messages.error(request, "No open and no future commitfest exists!")
                 return HttpResponseRedirect(
-                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                    "/%s/%s/" % (poc.commitfest.id, poc.patch.id)
                 )
             elif len(newcf) != 1:
                 messages.error(
                     request, "No open and multiple future commitfests exist!"
                 )
                 return HttpResponseRedirect(
-                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                    "/%s/%s/" % (poc.commitfest.id, poc.patch.id)
                 )
         elif len(newcf) != 1:
             messages.error(request, "Multiple open commitfests exists!")
-            return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+            return HttpResponseRedirect("/%s/%s/" % (poc.commitfest.id, poc.patch.id))
         elif newcf[0] == poc.commitfest:
             # The current open CF is the same one that we are already on.
             # In this case, try to see if there is a future CF we can
@@ -884,7 +884,7 @@ def close(request, cfid, patchid, status):
                     "Cannot move patch to the same commitfest, and no future commitfests exist!",
                 )
                 return HttpResponseRedirect(
-                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                    "/%s/%s/" % (poc.commitfest.id, poc.patch.id)
                 )
             elif len(newcf) != 1:
                 messages.error(
@@ -892,7 +892,7 @@ def close(request, cfid, patchid, status):
                     "Cannot move patch to the same commitfest, and multiple future commitfests exist!",
                 )
                 return HttpResponseRedirect(
-                    '/%s/%s/' % (poc.commitfest.id, poc.patch.id)
+                    "/%s/%s/" % (poc.commitfest.id, poc.patch.id)
                 )
         # Create a mapping to the new commitfest that we are bouncing
         # this patch to.
@@ -903,8 +903,8 @@ def close(request, cfid, patchid, status):
             enterdate=datetime.now(),
         )
         newpoc.save()
-    elif status == 'committed':
-        committer = get_object_or_404(Committer, user__username=request.GET['c'])
+    elif status == "committed":
+        committer = get_object_or_404(Committer, user__username=request.GET["c"])
         if committer != poc.patch.committer:
             # Committer changed!
             prevcommitter = poc.patch.committer
@@ -912,7 +912,7 @@ def close(request, cfid, patchid, status):
             PatchHistory(
                 patch=poc.patch,
                 by=request.user,
-                what='Changed committer to %s' % committer,
+                what="Changed committer to %s" % committer,
             ).save_and_notify(prevcommitter=prevcommitter)
         poc.status = PatchOnCommitFest.STATUS_COMMITTED
     else:
@@ -925,11 +925,11 @@ def close(request, cfid, patchid, status):
     PatchHistory(
         patch=poc.patch,
         by=request.user,
-        what='Closed in commitfest %s with status: %s'
+        what="Closed in commitfest %s with status: %s"
         % (poc.commitfest, poc.statusstring),
     ).save_and_notify()
 
-    return HttpResponseRedirect('/%s/%s/' % (poc.commitfest.id, poc.patch.id))
+    return HttpResponseRedirect("/%s/%s/" % (poc.commitfest.id, poc.patch.id))
 
 
 @login_required
@@ -940,23 +940,23 @@ def reviewer(request, cfid, patchid, status):
 
     is_reviewer = request.user in patch.reviewers.all()
 
-    if status == 'become' and not is_reviewer:
+    if status == "become" and not is_reviewer:
         patch.reviewers.add(request.user)
         patch.set_modified()
         PatchHistory(
             patch=patch,
             by=request.user,
-            what='Added %s as reviewer' % request.user.username,
+            what="Added %s as reviewer" % request.user.username,
         ).save_and_notify()
-    elif status == 'remove' and is_reviewer:
+    elif status == "remove" and is_reviewer:
         patch.reviewers.remove(request.user)
         patch.set_modified()
         PatchHistory(
             patch=patch,
             by=request.user,
-            what='Removed %s from reviewers' % request.user.username,
+            what="Removed %s from reviewers" % request.user.username,
         ).save_and_notify()
-    return HttpResponseRedirect('../../')
+    return HttpResponseRedirect("../../")
 
 
 @login_required
@@ -967,30 +967,30 @@ def committer(request, cfid, patchid, status):
 
     committer = list(Committer.objects.filter(user=request.user, active=True))
     if len(committer) == 0:
-        return HttpResponseForbidden('Only committers can do that!')
+        return HttpResponseForbidden("Only committers can do that!")
     committer = committer[0]
 
     is_committer = committer == patch.committer
 
     prevcommitter = patch.committer
-    if status == 'become' and not is_committer:
+    if status == "become" and not is_committer:
         patch.committer = committer
         patch.set_modified()
         PatchHistory(
             patch=patch,
             by=request.user,
-            what='Added %s as committer' % request.user.username,
+            what="Added %s as committer" % request.user.username,
         ).save_and_notify(prevcommitter=prevcommitter)
-    elif status == 'remove' and is_committer:
+    elif status == "remove" and is_committer:
         patch.committer = None
         patch.set_modified()
         PatchHistory(
             patch=patch,
             by=request.user,
-            what='Removed %s from committers' % request.user.username,
+            what="Removed %s from committers" % request.user.username,
         ).save_and_notify(prevcommitter=prevcommitter)
     patch.save()
-    return HttpResponseRedirect('../../')
+    return HttpResponseRedirect("../../")
 
 
 @login_required
@@ -999,7 +999,7 @@ def subscribe(request, cfid, patchid, sub):
     get_object_or_404(CommitFest, pk=cfid)
     patch = get_object_or_404(Patch, pk=patchid)
 
-    if sub == 'un':
+    if sub == "un":
         patch.subscribers.remove(request.user)
         messages.info(request, "You have been unsubscribed from updates on this patch")
     else:
@@ -1016,17 +1016,17 @@ def send_email(request, cfid):
     if not request.user.is_staff:
         raise Http404("Only CF managers can do that.")
 
-    if request.method == 'POST':
-        authoridstring = request.POST['authors']
-        revieweridstring = request.POST['reviewers']
+    if request.method == "POST":
+        authoridstring = request.POST["authors"]
+        revieweridstring = request.POST["reviewers"]
         form = BulkEmailForm(data=request.POST)
         if form.is_valid():
             q = Q()
             if authoridstring:
-                q = q | Q(patch_author__in=[int(x) for x in authoridstring.split(',')])
+                q = q | Q(patch_author__in=[int(x) for x in authoridstring.split(",")])
             if revieweridstring:
                 q = q | Q(
-                    patch_reviewer__in=[int(x) for x in revieweridstring.split(',')]
+                    patch_reviewer__in=[int(x) for x in revieweridstring.split(",")]
                 )
 
             recipients = User.objects.filter(q).distinct()
@@ -1035,25 +1035,25 @@ def send_email(request, cfid):
                 send_simple_mail(
                     UserWrapper(request.user).email,
                     r.email,
-                    form.cleaned_data['subject'],
-                    form.cleaned_data['body'],
+                    form.cleaned_data["subject"],
+                    form.cleaned_data["body"],
                     request.user.username,
                 )
                 messages.add_message(
                     request, messages.INFO, "Sent email to %s" % r.email
                 )
-            return HttpResponseRedirect('..')
+            return HttpResponseRedirect("..")
     else:
-        authoridstring = request.GET.get('authors', None)
-        revieweridstring = request.GET.get('reviewers', None)
+        authoridstring = request.GET.get("authors", None)
+        revieweridstring = request.GET.get("reviewers", None)
         form = BulkEmailForm(
-            initial={'authors': authoridstring, 'reviewers': revieweridstring}
+            initial={"authors": authoridstring, "reviewers": revieweridstring}
         )
 
     if authoridstring:
         authors = list(
             User.objects.filter(
-                patch_author__in=[int(x) for x in authoridstring.split(',')]
+                patch_author__in=[int(x) for x in authoridstring.split(",")]
             ).distinct()
         )
     else:
@@ -1061,7 +1061,7 @@ def send_email(request, cfid):
     if revieweridstring:
         reviewers = list(
             User.objects.filter(
-                patch_reviewer__in=[int(x) for x in revieweridstring.split(',')]
+                patch_reviewer__in=[int(x) for x in revieweridstring.split(",")]
             ).distinct()
         )
     else:
@@ -1071,7 +1071,7 @@ def send_email(request, cfid):
         messages.add_message(
             request, messages.WARNING, "No recipients specified, cannot send email"
         )
-        return HttpResponseRedirect('..')
+        return HttpResponseRedirect("..")
 
     messages.add_message(
         request,
@@ -1099,15 +1099,15 @@ def send_email(request, cfid):
 
     return render(
         request,
-        'base_form.html',
+        "base_form.html",
         {
-            'cf': cf,
-            'form': form,
-            'title': 'Send email',
-            'breadcrumbs': [
-                {'title': cf.title, 'href': '/%s/' % cf.pk},
+            "cf": cf,
+            "form": form,
+            "title": "Send email",
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
             ],
-            'savebutton': 'Send email',
+            "savebutton": "Send email",
         },
     )
 
@@ -1221,11 +1221,11 @@ def cfbot_ingest(message):
 
 @csrf_exempt
 def cfbot_notify(request):
-    if request.method != 'POST':
+    if request.method != "POST":
         return HttpResponseForbidden("Invalid method")
 
     j = json.loads(request.body)
-    if not hmac.compare_digest(j['shared_secret'], settings.CFBOT_SECRET):
+    if not hmac.compare_digest(j["shared_secret"], settings.CFBOT_SECRET):
         return HttpResponseForbidden("Invalid API key")
 
     cfbot_ingest(j)
@@ -1234,14 +1234,14 @@ def cfbot_notify(request):
 
 @csrf_exempt
 def thread_notify(request):
-    if request.method != 'POST':
+    if request.method != "POST":
         return HttpResponseForbidden("Invalid method")
 
     j = json.loads(request.body)
-    if j['apikey'] != settings.ARCHIVES_APIKEY:
+    if j["apikey"] != settings.ARCHIVES_APIKEY:
         return HttpResponseForbidden("Invalid API key")
 
-    for m in j['messageids']:
+    for m in j["messageids"]:
         try:
             t = MailThread.objects.get(messageid=m)
             refresh_single_thread(t)

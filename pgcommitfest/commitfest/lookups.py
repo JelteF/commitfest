@@ -8,7 +8,7 @@ import json
 
 @login_required
 def userlookup(request):
-    query = request.GET.get('query', None)
+    query = request.GET.get("query", None)
     if not query:
         raise Http404()
 
@@ -22,14 +22,14 @@ def userlookup(request):
     return HttpResponse(
         json.dumps(
             {
-                'values': [
+                "values": [
                     {
-                        'id': u.id,
-                        'value': '{} ({})'.format(u.username, u.get_full_name()),
+                        "id": u.id,
+                        "value": "{} ({})".format(u.username, u.get_full_name()),
                     }
                     for u in users
                 ],
             }
         ),
-        content_type='application/json',
+        content_type="application/json",
     )

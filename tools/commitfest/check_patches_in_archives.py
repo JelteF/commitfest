@@ -14,7 +14,7 @@ import magic
 import logging
 
 # Set up for accessing django
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), '../../'))
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "../../"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pgcommitfest.settings")
 import django  # noqa: E402
 
@@ -30,7 +30,7 @@ if __name__ == "__main__":
 
     # Logging always done to stdout, but we can turn on/off how much
     logging.basicConfig(
-        format='%(asctime)s %(levelname)s: %(msg)s',
+        format="%(asctime)s %(levelname)s: %(msg)s",
         level=debug and logging.DEBUG or logging.INFO,
         stream=sys.stdout,
     )
@@ -51,13 +51,13 @@ if __name__ == "__main__":
 
         resp = requests.get(
             "http{0}://{1}:{2}{3}".format(
-                settings.ARCHIVES_PORT == 443 and 's' or '',
+                settings.ARCHIVES_PORT == 443 and "s" or "",
                 settings.ARCHIVES_SERVER,
                 settings.ARCHIVES_PORT,
                 url,
             ),
             headers={
-                'Host': settings.ARCHIVES_HOST,
+                "Host": settings.ARCHIVES_HOST,
             },
             timeout=settings.ARCHIVES_TIMEOUT,
         )
@@ -72,7 +72,7 @@ if __name__ == "__main__":
 
         # We don't support gzipped or tar:ed patches or anything like
         # that at this point - just plain patches.
-        if mtype.startswith('text/x-diff'):
+        if mtype.startswith("text/x-diff"):
             a.ispatch = True
         else:
             a.ispatch = False

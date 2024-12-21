@@ -13,7 +13,7 @@ import os
 import smtplib
 
 # Set up to run in django environment
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), '../../'))
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "../../"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pgcommitfest.settings")
 import django  # noqa: E402
 
@@ -39,7 +39,7 @@ if __name__ == "__main__":
         # If it fails we'll throw an exception and just come back on the
         # next cron job. And local delivery should never fail...
         smtp = smtplib.SMTP("localhost")
-        smtp.sendmail(m.sender, m.receiver, m.fullmsg.encode('utf-8'))
+        smtp.sendmail(m.sender, m.receiver, m.fullmsg.encode("utf-8"))
         smtp.close()
         m.delete()
         transaction.commit()

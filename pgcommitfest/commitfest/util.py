@@ -27,7 +27,7 @@ class DiffableModel(object):
                 # Since we only care about the *new* value, it's easy enough.
                 diffs[k] = (v[0], getattr(self, k))
         # Many to many lookups
-        if hasattr(self, 'map_manytomany_for_diff'):
+        if hasattr(self, "map_manytomany_for_diff"):
             for k, v in diffs.items():
                 if k in manytomanyfieldnames and k in self.map_manytomany_for_diff:
                     # Try to show the display name instead here

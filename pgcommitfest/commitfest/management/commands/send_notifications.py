@@ -17,23 +17,23 @@ class Command(BaseCommand):
             # build our own.
             matches = {}
             for n in PendingNotification.objects.all().order_by(
-                'user', 'history__patch__id', 'history__id'
+                "user", "history__patch__id", "history__id"
             ):
                 if n.user.id not in matches:
-                    matches[n.user.id] = {'user': n.user, 'patches': {}}
-                if n.history.patch.id not in matches[n.user.id]['patches']:
-                    matches[n.user.id]['patches'][n.history.patch.id] = {
-                        'patch': n.history.patch,
-                        'entries': [],
+                    matches[n.user.id] = {"user": n.user, "patches": {}}
+                if n.history.patch.id not in matches[n.user.id]["patches"]:
+                    matches[n.user.id]["patches"][n.history.patch.id] = {
+                        "patch": n.history.patch,
+                        "entries": [],
                     }
-                matches[n.user.id]['patches'][n.history.patch.id]['entries'].append(
+                matches[n.user.id]["patches"][n.history.patch.id]["entries"].append(
                     n.history
                 )
                 n.delete()
 
             # Ok, now let's build emails from this
             for v in matches.values():
-                user = v['user']
+                user = v["user"]
                 email = user.email
                 try:
                     if user.userprofile and user.userprofile.notifyemail:
@@ -46,9 +46,9 @@ class Command(BaseCommand):
                     None,
                     email,
                     "PostgreSQL commitfest updates",
-                    'mail/patch_notify.txt',
+                    "mail/patch_notify.txt",
                     {
-                        'user': user,
-                        'patches': v['patches'],
+                        "user": user,
+                        "patches": v["patches"],
                     },
                 )

@@ -12,8 +12,8 @@ class UserExtraEmail(models.Model):
         return self.email
 
     class Meta:
-        ordering = ('user', 'email')
-        unique_together = (('user', 'email'),)
+        ordering = ("user", "email")
+        unique_together = (("user", "email"),)
 
 
 class UserProfile(models.Model):
@@ -22,15 +22,15 @@ class UserProfile(models.Model):
         UserExtraEmail,
         null=True,
         blank=True,
-        verbose_name='Sender email',
+        verbose_name="Sender email",
         on_delete=models.SET_NULL,
     )
     notifyemail = models.ForeignKey(
         UserExtraEmail,
         null=True,
         blank=True,
-        verbose_name='Notifications sent to',
-        related_name='notifier',
+        verbose_name="Notifications sent to",
+        related_name="notifier",
         on_delete=models.SET_NULL,
     )
     notify_all_author = models.BooleanField(

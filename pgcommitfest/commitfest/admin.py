@@ -14,7 +14,7 @@ from .models import (
 
 
 class CommitterAdmin(admin.ModelAdmin):
-    list_display = ('user', 'active')
+    list_display = ("user", "active")
 
 
 class PatchOnCommitFestInline(admin.TabularInline):
@@ -24,15 +24,15 @@ class PatchOnCommitFestInline(admin.TabularInline):
 
 class PatchAdmin(admin.ModelAdmin):
     inlines = (PatchOnCommitFestInline,)
-    list_display = ('name',)
+    list_display = ("name",)
 
 
 class MailThreadAttachmentAdmin(admin.ModelAdmin):
     list_display = (
-        'date',
-        'author',
-        'messageid',
-        'mailthread',
+        "date",
+        "author",
+        "messageid",
+        "mailthread",
     )
 
 

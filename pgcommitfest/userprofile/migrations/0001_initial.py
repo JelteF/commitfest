@@ -12,56 +12,56 @@ class Migration(migrations.Migration):
 
     operations = [
         migrations.CreateModel(
-            name='UserExtraEmail',
+            name="UserExtraEmail",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
-                        verbose_name='ID',
+                        verbose_name="ID",
                         serialize=False,
                         auto_created=True,
                         primary_key=True,
                     ),
                 ),
-                ('email', models.EmailField(unique=True, max_length=100)),
-                ('confirmed', models.BooleanField(default=False)),
-                ('token', models.CharField(max_length=100, blank=True)),
-                ('tokensent', models.DateTimeField()),
+                ("email", models.EmailField(unique=True, max_length=100)),
+                ("confirmed", models.BooleanField(default=False)),
+                ("token", models.CharField(max_length=100, blank=True)),
+                ("tokensent", models.DateTimeField()),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE
                     ),
                 ),
             ],
             options={
-                'ordering': ('user', 'email'),
+                "ordering": ("user", "email"),
             },
         ),
         migrations.CreateModel(
-            name='UserProfile',
+            name="UserProfile",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
-                        verbose_name='ID',
+                        verbose_name="ID",
                         serialize=False,
                         auto_created=True,
                         primary_key=True,
                     ),
                 ),
                 (
-                    'selectedemail',
+                    "selectedemail",
                     models.ForeignKey(
-                        verbose_name='Sender email',
+                        verbose_name="Sender email",
                         blank=True,
-                        to='userprofile.UserExtraEmail',
+                        to="userprofile.UserExtraEmail",
                         null=True,
                         on_delete=models.CASCADE,
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE
                     ),
@@ -69,7 +69,7 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AlterUniqueTogether(
-            name='userextraemail',
-            unique_together=set([('user', 'email')]),
+            name="userextraemail",
+            unique_together=set([("user", "email")]),
         ),
     ]

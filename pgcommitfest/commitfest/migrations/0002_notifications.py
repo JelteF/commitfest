@@ -8,30 +8,30 @@ from django.conf import settings
 class Migration(migrations.Migration):
     dependencies = [
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
-        ('commitfest', '0001_initial'),
+        ("commitfest", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='PendingNotification',
+            name="PendingNotification",
             fields=[
                 (
-                    'id',
+                    "id",
                     models.AutoField(
-                        verbose_name='ID',
+                        verbose_name="ID",
                         serialize=False,
                         auto_created=True,
                         primary_key=True,
                     ),
                 ),
                 (
-                    'history',
+                    "history",
                     models.ForeignKey(
-                        to='commitfest.PatchHistory', on_delete=models.CASCADE
+                        to="commitfest.PatchHistory", on_delete=models.CASCADE
                     ),
                 ),
                 (
-                    'user',
+                    "user",
                     models.ForeignKey(
                         to=settings.AUTH_USER_MODEL, on_delete=models.CASCADE
                     ),
@@ -39,10 +39,10 @@ class Migration(migrations.Migration):
             ],
         ),
         migrations.AddField(
-            model_name='patch',
-            name='subscribers',
+            model_name="patch",
+            name="subscribers",
             field=models.ManyToManyField(
-                related_name='patch_subscriber', to=settings.AUTH_USER_MODEL, blank=True
+                related_name="patch_subscriber", to=settings.AUTH_USER_MODEL, blank=True
             ),
         ),
     ]

@@ -11,7 +11,7 @@ import sys
 import logging
 
 # Set up for accessing django
-sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), '../../'))
+sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), "../../"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pgcommitfest.settings")
 import django  # noqa: E402
 
@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # Logging always done to stdout, but we can turn on/off how much
     logging.basicConfig(
-        format='%(asctime)s %(levelname)s: %(msg)s',
+        format="%(asctime)s %(levelname)s: %(msg)s",
         level=debug and logging.DEBUG or logging.INFO,
         stream=sys.stdout,
     )

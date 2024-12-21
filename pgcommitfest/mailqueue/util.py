@@ -15,23 +15,23 @@ def send_simple_mail(
     # attachment format, each is a tuple of (name, mimetype,contents)
     # content should already be base64 encoded
     msg = MIMEMultipart()
-    msg['Subject'] = subject
-    msg['To'] = receiver
-    msg['From'] = sender
-    msg['Date'] = formatdate(localtime=True)
-    msg['User-Agent'] = 'pgcommitfest'
+    msg["Subject"] = subject
+    msg["To"] = receiver
+    msg["From"] = sender
+    msg["Date"] = formatdate(localtime=True)
+    msg["User-Agent"] = "pgcommitfest"
     if sending_username:
-        msg['X-cfsender'] = sending_username
+        msg["X-cfsender"] = sending_username
 
-    msg.attach(MIMEText(msgtxt, _charset='utf-8'))
+    msg.attach(MIMEText(msgtxt, _charset="utf-8"))
 
     if attachments:
         for filename, contenttype, content in attachments:
-            main, sub = contenttype.split('/')
+            main, sub = contenttype.split("/")
             part = MIMENonMultipart(main, sub)
             part.set_payload(content)
             part.add_header(
-                'Content-Disposition', 'attachment; filename="%s"' % filename
+                "Content-Disposition", 'attachment; filename="%s"' % filename
             )
             encoders.encode_base64(part)
             msg.attach(part)
