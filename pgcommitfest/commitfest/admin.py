@@ -1,15 +1,15 @@
 from django.contrib import admin
 
 from .models import (
-    Committer,
     CommitFest,
+    Committer,
+    MailThread,
+    MailThreadAttachment,
     Patch,
     PatchHistory,
     PatchOnCommitFest,
     TargetVersion,
     Topic,
-    MailThread,
-    MailThreadAttachment,
 )
 
 
