@@ -2,4 +2,4 @@
 # line-length = 120
 
 [tool.ruff.format]
-quote-style = "preserve"
+# quote-style = "preserve"
