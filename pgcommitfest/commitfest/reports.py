@@ -1,8 +1,7 @@
-from django.shortcuts import render, get_object_or_404
-from django.http import Http404
-from django.template import RequestContext
 from django.contrib.auth.decorators import login_required
 from django.db import connection
+from django.http import Http404
+from django.shortcuts import get_object_or_404, render
 
 from .models import CommitFest
 
@@ -14,7 +13,8 @@ def authorstats(request, cfid):
         raise Http404("Only CF Managers can do that.")
 
     cursor = connection.cursor()
-    cursor.execute("""
+    cursor.execute(
+        """
 WITH patches(id,name) AS (
   SELECT p.id, name
    FROM commitfest_patch p
@@ -37,13 +37,20 @@ FROM (authors FULL OUTER JOIN reviewers ON authors.userid=reviewers.userid)
 INNER JOIN auth_user u ON u.id=COALESCE(authors.userid, reviewers.userid)
 ORDER BY last_name, first_name
 """,
-                   {
-                       'cid': cf.id,
-                   })
+        {
+            "cid": cf.id,
+        },
+    )
 
-    return render(request, 'report_authors.html', {
-        'cf': cf,
-        'report': cursor.fetchall(),
-        'title': 'Author stats',
-        'breadcrumbs': [{'title': cf.title, 'href': '/%s/' % cf.pk}, ],
-    })
+    return render(
+        request,
+        "report_authors.html",
+        {
+            "cf": cf,
+            "report": cursor.fetchall(),
+            "title": "Author stats",
+            "breadcrumbs": [
+                {"title": cf.title, "href": "/%s/" % cf.pk},
+            ],
+        },
+    )

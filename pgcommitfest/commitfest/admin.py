@@ -1,10 +1,20 @@
 from django.contrib import admin
 
-from .models import *
+from .models import (
+    CommitFest,
+    Committer,
+    MailThread,
+    MailThreadAttachment,
+    Patch,
+    PatchHistory,
+    PatchOnCommitFest,
+    TargetVersion,
+    Topic,
+)
 
 
 class CommitterAdmin(admin.ModelAdmin):
-    list_display = ('user', 'active')
+    list_display = ("user", "active")
 
 
 class PatchOnCommitFestInline(admin.TabularInline):
@@ -14,11 +24,16 @@ class PatchOnCommitFestInline(admin.TabularInline):
 
 class PatchAdmin(admin.ModelAdmin):
     inlines = (PatchOnCommitFestInline,)
-    list_display = ('name', )
+    list_display = ("name",)
 
 
 class MailThreadAttachmentAdmin(admin.ModelAdmin):
-    list_display = ('date', 'author', 'messageid', 'mailthread',)
+    list_display = (
+        "date",
+        "author",
+        "messageid",
+        "mailthread",
+    )
 
 
 admin.site.register(Committer, CommitterAdmin)

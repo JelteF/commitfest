@@ -1,18 +1,20 @@
-from django.db import models
 from django.contrib.auth.models import User
+from django.db import models
 
 from datetime import datetime
 
-from .util import DiffableModel
-
 from pgcommitfest.userprofile.models import UserProfile
+
+from .util import DiffableModel
 
 
 # We have few enough of these, and it's really the only thing we
 # need to extend from the user model, so just create a separate
 # class.
 class Committer(models.Model):
-    user = models.OneToOneField(User, null=False, blank=False, primary_key=True, on_delete=models.CASCADE)
+    user = models.OneToOneField(
+        User, null=False, blank=False, primary_key=True, on_delete=models.CASCADE
+    )
     active = models.BooleanField(null=False, blank=False, default=True)
 
     def __str__(self):
@@ -20,10 +22,14 @@ class Committer(models.Model):
 
     @property
     def fullname(self):
-        return "%s %s (%s)" % (self.user.first_name, self.user.last_name, self.user.username)
+        return "%s %s (%s)" % (
+            self.user.first_name,
+            self.user.last_name,
+            self.user.username,
+        )
 
     class Meta:
-        ordering = ('user__last_name', 'user__first_name')
+        ordering = ("user__last_name", "user__first_name")
 
 
 class CommitFest(models.Model):
@@ -32,13 +38,15 @@ class CommitFest(models.Model):
     STATUS_INPROGRESS = 3
     STATUS_CLOSED = 4
     _STATUS_CHOICES = (
-        (STATUS_FUTURE, 'Future'),
-        (STATUS_OPEN, 'Open'),
-        (STATUS_INPROGRESS, 'In Progress'),
-        (STATUS_CLOSED, 'Closed'),
+        (STATUS_FUTURE, "Future"),
+        (STATUS_OPEN, "Open"),
+        (STATUS_INPROGRESS, "In Progress"),
+        (STATUS_CLOSED, "Closed"),
     )
     name = models.CharField(max_length=100, blank=False, null=False, unique=True)
-    status = models.IntegerField(null=False, blank=False, default=1, choices=_STATUS_CHOICES)
+    status = models.IntegerField(
+        null=False, blank=False, default=1, choices=_STATUS_CHOICES
+    )
     startdate = models.DateField(blank=True, null=True)
     enddate = models.DateField(blank=True, null=True)
 
@@ -64,8 +72,8 @@ class CommitFest(models.Model):
         return self.name
 
     class Meta:
-        verbose_name_plural = 'Commitfests'
-        ordering = ('-startdate',)
+        verbose_name_plural = "Commitfests"
+        ordering = ("-startdate",)
 
 
 class Topic(models.Model):
@@ -79,35 +87,49 @@ class TargetVersion(models.Model):
     version = models.CharField(max_length=8, blank=False, null=False, unique=True)
 
     class Meta:
-        ordering = ['-version', ]
+        ordering = [
+            "-version",
+        ]
 
     def __str__(self):
         return self.version
 
 
 class Patch(models.Model, DiffableModel):
-    name = models.CharField(max_length=500, blank=False, null=False, verbose_name='Description')
+    name = models.CharField(
+        max_length=500, blank=False, null=False, verbose_name="Description"
+    )
     topic = models.ForeignKey(Topic, blank=False, null=False, on_delete=models.CASCADE)
 
     # One patch can be in multiple commitfests, if it has history
-    commitfests = models.ManyToManyField(CommitFest, through='PatchOnCommitFest')
+    commitfests = models.ManyToManyField(CommitFest, through="PatchOnCommitFest")
 
     # If there is a wiki page discussing this patch
-    wikilink = models.URLField(blank=True, null=False, default='')
+    wikilink = models.URLField(blank=True, null=False, default="")
 
     # If there is a git repo about this patch
-    gitlink = models.URLField(blank=True, null=False, default='')
+    gitlink = models.URLField(blank=True, null=False, default="")
 
     # Version targeted by this patch
-    targetversion = models.ForeignKey(TargetVersion, blank=True, null=True, verbose_name="Target version", on_delete=models.CASCADE)
+    targetversion = models.ForeignKey(
+        TargetVersion,
+        blank=True,
+        null=True,
+        verbose_name="Target version",
+        on_delete=models.CASCADE,
+    )
 
-    authors = models.ManyToManyField(User, related_name='patch_author', blank=True)
-    reviewers = models.ManyToManyField(User, related_name='patch_reviewer', blank=True)
+    authors = models.ManyToManyField(User, related_name="patch_author", blank=True)
+    reviewers = models.ManyToManyField(User, related_name="patch_reviewer", blank=True)
 
-    committer = models.ForeignKey(Committer, blank=True, null=True, on_delete=models.CASCADE)
+    committer = models.ForeignKey(
+        Committer, blank=True, null=True, on_delete=models.CASCADE
+    )
 
     # Users to be notified when something happens
-    subscribers = models.ManyToManyField(User, related_name='patch_subscriber', blank=True)
+    subscribers = models.ManyToManyField(
+        User, related_name="patch_subscriber", blank=True
+    )
 
     # Datestamps for tracking activity
     created = models.DateTimeField(blank=False, null=False, auto_now_add=True)
@@ -118,24 +140,34 @@ class Patch(models.Model, DiffableModel):
     lastmail = models.DateTimeField(blank=True, null=True)
 
     map_manytomany_for_diff = {
-        'authors': 'authors_string',
-        'reviewers': 'reviewers_string',
+        "authors": "authors_string",
+        "reviewers": "reviewers_string",
     }
 
     # Some accessors
     @property
     def authors_string(self):
-        return ", ".join(["%s %s (%s)" % (a.first_name, a.last_name, a.username) for a in self.authors.all()])
+        return ", ".join(
+            [
+                "%s %s (%s)" % (a.first_name, a.last_name, a.username)
+                for a in self.authors.all()
+            ]
+        )
 
     @property
     def reviewers_string(self):
-        return ", ".join(["%s %s (%s)" % (a.first_name, a.last_name, a.username) for a in self.reviewers.all()])
+        return ", ".join(
+            [
+                "%s %s (%s)" % (a.first_name, a.last_name, a.username)
+                for a in self.reviewers.all()
+            ]
+        )
 
     @property
     def history(self):
         # Need to wrap this in a function to make sure it calls
         # select_related() and doesn't generate a bazillion queries
-        return self.patchhistory_set.select_related('by').all()
+        return self.patchhistory_set.select_related("by").all()
 
     def set_modified(self, newmod=None):
         # Set the modified date to newmod, but only if that's newer than
@@ -159,7 +191,7 @@ class Patch(models.Model, DiffableModel):
         return self.name
 
     class Meta:
-        verbose_name_plural = 'patches'
+        verbose_name_plural = "patches"
 
 
 class PatchOnCommitFest(models.Model):
@@ -176,24 +208,24 @@ class PatchOnCommitFest(models.Model):
     STATUS_RETURNED = 7
     STATUS_WITHDRAWN = 8
     _STATUS_CHOICES = (
-        (STATUS_REVIEW, 'Needs review'),
-        (STATUS_AUTHOR, 'Waiting on Author'),
-        (STATUS_COMMITTER, 'Ready for Committer'),
-        (STATUS_COMMITTED, 'Committed'),
-        (STATUS_NEXT, 'Moved to next CF'),
-        (STATUS_REJECTED, 'Rejected'),
-        (STATUS_RETURNED, 'Returned with feedback'),
-        (STATUS_WITHDRAWN, 'Withdrawn'),
+        (STATUS_REVIEW, "Needs review"),
+        (STATUS_AUTHOR, "Waiting on Author"),
+        (STATUS_COMMITTER, "Ready for Committer"),
+        (STATUS_COMMITTED, "Committed"),
+        (STATUS_NEXT, "Moved to next CF"),
+        (STATUS_REJECTED, "Rejected"),
+        (STATUS_RETURNED, "Returned with feedback"),
+        (STATUS_WITHDRAWN, "Withdrawn"),
     )
     _STATUS_LABELS = (
-        (STATUS_REVIEW, 'default'),
-        (STATUS_AUTHOR, 'primary'),
-        (STATUS_COMMITTER, 'info'),
-        (STATUS_COMMITTED, 'success'),
-        (STATUS_NEXT, 'warning'),
-        (STATUS_REJECTED, 'danger'),
-        (STATUS_RETURNED, 'danger'),
-        (STATUS_WITHDRAWN, 'danger'),
+        (STATUS_REVIEW, "default"),
+        (STATUS_AUTHOR, "primary"),
+        (STATUS_COMMITTER, "info"),
+        (STATUS_COMMITTED, "success"),
+        (STATUS_NEXT, "warning"),
+        (STATUS_REJECTED, "danger"),
+        (STATUS_RETURNED, "danger"),
+        (STATUS_WITHDRAWN, "danger"),
     )
     OPEN_STATUSES = [STATUS_REVIEW, STATUS_AUTHOR, STATUS_COMMITTER]
 
@@ -202,11 +234,15 @@ class PatchOnCommitFest(models.Model):
         return [x for x in cls._STATUS_CHOICES if x[0] in cls.OPEN_STATUSES]
 
     patch = models.ForeignKey(Patch, blank=False, null=False, on_delete=models.CASCADE)
-    commitfest = models.ForeignKey(CommitFest, blank=False, null=False, on_delete=models.CASCADE)
+    commitfest = models.ForeignKey(
+        CommitFest, blank=False, null=False, on_delete=models.CASCADE
+    )
     enterdate = models.DateTimeField(blank=False, null=False)
     leavedate = models.DateTimeField(blank=True, null=True)
 
-    status = models.IntegerField(blank=False, null=False, default=STATUS_REVIEW, choices=_STATUS_CHOICES)
+    status = models.IntegerField(
+        blank=False, null=False, default=STATUS_REVIEW, choices=_STATUS_CHOICES
+    )
 
     @property
     def is_closed(self):
@@ -217,13 +253,20 @@ class PatchOnCommitFest(models.Model):
         return [v for k, v in self._STATUS_CHOICES if k == self.status][0]
 
     class Meta:
-        unique_together = (('patch', 'commitfest',),)
-        ordering = ('-commitfest__startdate', )
+        unique_together = (
+            (
+                "patch",
+                "commitfest",
+            ),
+        )
+        ordering = ("-commitfest__startdate",)
 
 
 class PatchHistory(models.Model):
     patch = models.ForeignKey(Patch, blank=False, null=False, on_delete=models.CASCADE)
-    date = models.DateTimeField(blank=False, null=False, auto_now_add=True, db_index=True)
+    date = models.DateTimeField(
+        blank=False, null=False, auto_now_add=True, db_index=True
+    )
     by = models.ForeignKey(User, blank=False, null=False, on_delete=models.CASCADE)
     what = models.CharField(max_length=500, null=False, blank=False)
 
@@ -235,10 +278,9 @@ class PatchHistory(models.Model):
         return "%s - %s" % (self.patch.name, self.date)
 
     class Meta:
-        ordering = ('-date', )
+        ordering = ("-date",)
 
-    def save_and_notify(self, prevcommitter=None,
-                        prevreviewers=None, prevauthors=None):
+    def save_and_notify(self, prevcommitter=None, prevreviewers=None, prevauthors=None):
         # Save this model, and then trigger notifications if there are any. There are
         # many different things that can trigger notifications, so try them all.
         self.save()
@@ -248,7 +290,10 @@ class PatchHistory(models.Model):
 
         # Current or previous committer wants all notifications
         try:
-            if self.patch.committer and self.patch.committer.user.userprofile.notify_all_committer:
+            if (
+                self.patch.committer
+                and self.patch.committer.user.userprofile.notify_all_committer
+            ):
                 recipients.append(self.patch.committer.user)
         except UserProfile.DoesNotExist:
             pass
@@ -260,13 +305,22 @@ class PatchHistory(models.Model):
             pass
 
         # Current or previous reviewers wants all notifications
-        recipients.extend(self.patch.reviewers.filter(userprofile__notify_all_reviewer=True))
+        recipients.extend(
+            self.patch.reviewers.filter(userprofile__notify_all_reviewer=True)
+        )
         if prevreviewers:
             # prevreviewers is a list
-            recipients.extend(User.objects.filter(id__in=[p.id for p in prevreviewers], userprofile__notify_all_reviewer=True))
+            recipients.extend(
+                User.objects.filter(
+                    id__in=[p.id for p in prevreviewers],
+                    userprofile__notify_all_reviewer=True,
+                )
+            )
 
         # Current or previous authors wants all notifications
-        recipients.extend(self.patch.authors.filter(userprofile__notify_all_author=True))
+        recipients.extend(
+            self.patch.authors.filter(userprofile__notify_all_author=True)
+        )
 
         for u in set(recipients):
             if u != self.by:  # Don't notify for changes we make ourselves
@@ -297,11 +351,13 @@ class MailThread(models.Model):
         return self.subject
 
     class Meta:
-        ordering = ('firstmessage', )
+        ordering = ("firstmessage",)
 
 
 class MailThreadAttachment(models.Model):
-    mailthread = models.ForeignKey(MailThread, null=False, blank=False, on_delete=models.CASCADE)
+    mailthread = models.ForeignKey(
+        MailThread, null=False, blank=False, on_delete=models.CASCADE
+    )
     messageid = models.CharField(max_length=1000, null=False, blank=False)
     attachmentid = models.IntegerField(null=False, blank=False)
     filename = models.CharField(max_length=1000, null=False, blank=True)
@@ -310,12 +366,19 @@ class MailThreadAttachment(models.Model):
     ispatch = models.BooleanField(null=True)
 
     class Meta:
-        ordering = ('-date',)
-        unique_together = (('mailthread', 'messageid',), )
+        ordering = ("-date",)
+        unique_together = (
+            (
+                "mailthread",
+                "messageid",
+            ),
+        )
 
 
 class MailThreadAnnotation(models.Model):
-    mailthread = models.ForeignKey(MailThread, null=False, blank=False, on_delete=models.CASCADE)
+    mailthread = models.ForeignKey(
+        MailThread, null=False, blank=False, on_delete=models.CASCADE
+    )
     date = models.DateTimeField(null=False, blank=False, auto_now_add=True)
     user = models.ForeignKey(User, null=False, blank=False, on_delete=models.CASCADE)
     msgid = models.CharField(max_length=1000, null=False, blank=False)
@@ -326,10 +389,14 @@ class MailThreadAnnotation(models.Model):
 
     @property
     def user_string(self):
-        return "%s %s (%s)" % (self.user.first_name, self.user.last_name, self.user.username)
+        return "%s %s (%s)" % (
+            self.user.first_name,
+            self.user.last_name,
+            self.user.username,
+        )
 
     class Meta:
-        ordering = ('date', )
+        ordering = ("date",)
 
 
 class PatchStatus(models.Model):
@@ -339,19 +406,23 @@ class PatchStatus(models.Model):
 
 
 class PendingNotification(models.Model):
-    history = models.ForeignKey(PatchHistory, blank=False, null=False, on_delete=models.CASCADE)
+    history = models.ForeignKey(
+        PatchHistory, blank=False, null=False, on_delete=models.CASCADE
+    )
     user = models.ForeignKey(User, blank=False, null=False, on_delete=models.CASCADE)
 
 
 class CfbotBranch(models.Model):
     STATUS_CHOICES = [
-        ('testing', 'Testing'),
-        ('finished', 'Finished'),
-        ('failed', 'Failed'),
-        ('timeout', 'Timeout'),
+        ("testing", "Testing"),
+        ("finished", "Finished"),
+        ("failed", "Failed"),
+        ("timeout", "Timeout"),
     ]
 
-    patch = models.OneToOneField(Patch, on_delete=models.CASCADE, related_name="cfbot_branch", primary_key=True)
+    patch = models.OneToOneField(
+        Patch, on_delete=models.CASCADE, related_name="cfbot_branch", primary_key=True
+    )
     branch_id = models.IntegerField(null=False)
     branch_name = models.TextField(null=False)
     commit_id = models.TextField(null=True, blank=True)
@@ -364,15 +435,15 @@ class CfbotBranch(models.Model):
 
 class CfbotTask(models.Model):
     STATUS_CHOICES = [
-        ('CREATED', 'Created'),
-        ('NEEDS_APPROVAL', 'Needs Approval'),
-        ('TRIGGERED', 'Triggered'),
-        ('EXECUTING', 'Executing'),
-        ('FAILED', 'Failed'),
-        ('COMPLETED', 'Completed'),
-        ('SCHEDULED', 'Scheduled'),
-        ('ABORTED', 'Aborted'),
-        ('ERRORED', 'Errored'),
+        ("CREATED", "Created"),
+        ("NEEDS_APPROVAL", "Needs Approval"),
+        ("TRIGGERED", "Triggered"),
+        ("EXECUTING", "Executing"),
+        ("FAILED", "Failed"),
+        ("COMPLETED", "Completed"),
+        ("SCHEDULED", "Scheduled"),
+        ("ABORTED", "Aborted"),
+        ("ERRORED", "Errored"),
     ]
 
     # This id is only used by Django. Using text type for primary keys, has
@@ -385,7 +456,9 @@ class CfbotTask(models.Model):
     # ID opaque and store it as text.
     task_id = models.TextField(unique=True)
     task_name = models.TextField(null=False)
-    patch = models.ForeignKey(Patch, on_delete=models.CASCADE, related_name="cfbot_tasks")
+    patch = models.ForeignKey(
+        Patch, on_delete=models.CASCADE, related_name="cfbot_tasks"
+    )
     branch_id = models.IntegerField(null=False)
     position = models.IntegerField(null=False)
     # Actually a postgres enum column
