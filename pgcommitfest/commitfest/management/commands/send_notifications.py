@@ -34,13 +34,14 @@ class Command(BaseCommand):
                 except UserProfile.DoesNotExist:
                     pass
 
-                send_template_mail(settings.NOTIFICATION_FROM,
-                                   None,
-                                   email,
-                                   "PostgreSQL commitfest updates",
-                                   'mail/patch_notify.txt',
-                                   {
-                                       'user': user,
-                                       'patches': v['patches'],
-                                   },
-                                   )
+                send_template_mail(
+                    settings.NOTIFICATION_FROM,
+                    None,
+                    email,
+                    "PostgreSQL commitfest updates",
+                    'mail/patch_notify.txt',
+                    {
+                        'user': user,
+                        'patches': v['patches'],
+                    },
+                )

@@ -7,7 +7,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('commitfest', '0003_withdrawn_status'),
     ]
@@ -20,12 +19,20 @@ class Migration(migrations.Migration):
                 ('version', models.CharField(max_length=8, unique=True)),
             ],
             options={
-                'ordering': ['-version', ],
+                'ordering': [
+                    '-version',
+                ],
             },
         ),
         migrations.AddField(
             model_name='patch',
             name='targetversion',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='commitfest.TargetVersion', verbose_name='Target version'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to='commitfest.TargetVersion',
+                verbose_name='Target version',
+            ),
         ),
     ]

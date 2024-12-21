@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('commitfest', '0005_history_dateindex'),
     ]
@@ -14,12 +13,31 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='CfbotBranch',
             fields=[
-                ('patch', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, primary_key=True, related_name='cfbot_branch', serialize=False, to='commitfest.patch')),
+                (
+                    'patch',
+                    models.OneToOneField(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        primary_key=True,
+                        related_name='cfbot_branch',
+                        serialize=False,
+                        to='commitfest.patch',
+                    ),
+                ),
                 ('branch_id', models.IntegerField()),
                 ('branch_name', models.TextField()),
                 ('commit_id', models.TextField(blank=True, null=True)),
                 ('apply_url', models.TextField()),
-                ('status', models.TextField(choices=[('testing', 'Testing'), ('finished', 'Finished'), ('failed', 'Failed'), ('timeout', 'Timeout')])),
+                (
+                    'status',
+                    models.TextField(
+                        choices=[
+                            ('testing', 'Testing'),
+                            ('finished', 'Finished'),
+                            ('failed', 'Failed'),
+                            ('timeout', 'Timeout'),
+                        ]
+                    ),
+                ),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
             ],
@@ -32,10 +50,30 @@ class Migration(migrations.Migration):
                 ('task_name', models.TextField()),
                 ('branch_id', models.IntegerField()),
                 ('position', models.IntegerField()),
-                ('status', models.TextField(choices=[('CREATED', 'Created'), ('NEEDS_APPROVAL', 'Needs Approval'), ('TRIGGERED', 'Triggered'), ('EXECUTING', 'Executing'), ('FAILED', 'Failed'), ('COMPLETED', 'Completed'), ('SCHEDULED', 'Scheduled'), ('ABORTED', 'Aborted'), ('ERRORED', 'Errored')])),
+                (
+                    'status',
+                    models.TextField(
+                        choices=[
+                            ('CREATED', 'Created'),
+                            ('NEEDS_APPROVAL', 'Needs Approval'),
+                            ('TRIGGERED', 'Triggered'),
+                            ('EXECUTING', 'Executing'),
+                            ('FAILED', 'Failed'),
+                            ('COMPLETED', 'Completed'),
+                            ('SCHEDULED', 'Scheduled'),
+                            ('ABORTED', 'Aborted'),
+                            ('ERRORED', 'Errored'),
+                        ]
+                    ),
+                ),
                 ('created', models.DateTimeField(auto_now_add=True)),
                 ('modified', models.DateTimeField(auto_now=True)),
-                ('patch', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='cfbot_tasks', to='commitfest.patch')),
+                (
+                    'patch',
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE, related_name='cfbot_tasks', to='commitfest.patch'
+                    ),
+                ),
             ],
         ),
         migrations.RunSQL(

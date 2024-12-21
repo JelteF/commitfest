@@ -4,20 +4,18 @@ DEBUG = False
 TEMPLATE_DEBUG = DEBUG
 ALLOWED_HOSTS = ['*']
 
-ADMINS = (
-    ('webmaster@postgresql.org', 'webmaster@postgresql.org'),
-)
+ADMINS = (('webmaster@postgresql.org', 'webmaster@postgresql.org'),)
 
 MANAGERS = ADMINS
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',  # Add 'postgresql_psycopg2', 'postgresql', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'pgcommitfest',                      # Or path to database file if using sqlite3.
-        'USER': '',                      # Not used with sqlite3.
-        'PASSWORD': '',                  # Not used with sqlite3.
-        'HOST': '',                      # Set to empty string for localhost. Not used with sqlite3.
-        'PORT': '',                      # Set to empty string for default. Not used with sqlite3.
+        'NAME': 'pgcommitfest',  # Or path to database file if using sqlite3.
+        'USER': '',  # Not used with sqlite3.
+        'PASSWORD': '',  # Not used with sqlite3.
+        'HOST': '',  # Set to empty string for localhost. Not used with sqlite3.
+        'PORT': '',  # Set to empty string for default. Not used with sqlite3.
     }
 }
 
@@ -79,8 +77,7 @@ STATICFILES_DIRS = (
 
 # List of finder classes that know how to find static files in
 # various locations.
-STATICFILES_FINDERS = (
-)
+STATICFILES_FINDERS = ()
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = 'REALLYCHANGETHISINLOCAL_SETTINGS.PY'
@@ -95,21 +92,23 @@ MIDDLEWARE = (
 
 ROOT_URLCONF = 'pgcommitfest.urls'
 
-TEMPLATES = [{
-    'BACKEND': 'django.template.backends.django.DjangoTemplates',
-    'DIRS': ['global_templates'],
-    'OPTIONS': {
-        'context_processors': [
-            'django.template.context_processors.request',
-            'django.contrib.auth.context_processors.auth',
-            'django.contrib.messages.context_processors.messages',
-        ],
-        'loaders': [
-            'django.template.loaders.filesystem.Loader',
-            'django.template.loaders.app_directories.Loader',
-        ],
-    },
-}]
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': ['global_templates'],
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+            'loaders': [
+                'django.template.loaders.filesystem.Loader',
+                'django.template.loaders.app_directories.Loader',
+            ],
+        },
+    }
+]
 
 INSTALLED_APPS = (
     'django.contrib.auth',
@@ -125,9 +124,7 @@ INSTALLED_APPS = (
     'pgcommitfest.userprofile',
 )
 
-AUTHENTICATION_BACKENDS = (
-    'pgcommitfest.auth.AuthBackend',
-)
+AUTHENTICATION_BACKENDS = ('pgcommitfest.auth.AuthBackend',)
 
 
 # A sample logging configuration. The only tangible logging
@@ -138,19 +135,14 @@ AUTHENTICATION_BACKENDS = (
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'mail_admins': {
-            'level': 'ERROR',
-            'class': 'django.utils.log.AdminEmailHandler'
-        }
-    },
+    'handlers': {'mail_admins': {'level': 'ERROR', 'class': 'django.utils.log.AdminEmailHandler'}},
     'loggers': {
         'django.request': {
             'handlers': ['mail_admins'],
             'level': 'ERROR',
             'propagate': True,
         },
-    }
+    },
 }
 
 DATE_FORMAT = 'Y-m-d'
@@ -158,10 +150,10 @@ DATETIME_FORMAT = 'Y-m-d H:i:s'
 
 LOGIN_URL = '/account/login/'
 
-ARCHIVES_TIMEOUT = 10    # Seconds to wait for calls to the archives
+ARCHIVES_TIMEOUT = 10  # Seconds to wait for calls to the archives
 ARCHIVES_SERVER = "localhost"
 ARCHIVES_PORT = "8001"
-ARCHIVES_HOST = "archives.postgresql.org"    # Host: header to send
+ARCHIVES_HOST = "archives.postgresql.org"  # Host: header to send
 ARCHIVES_APIKEY = None
 
 # Email address to pgsql-hackers. Set to something local to test maybe?
@@ -172,6 +164,6 @@ NOTIFICATION_FROM = "webmaster@postgresql.org"
 
 # Load local settings overrides
 try:
-    from .local_settings import * # noqa: F403
+    from .local_settings import *  # noqa: F403
 except ImportError:
     pass

@@ -26,10 +26,9 @@ class Http503(Exception):
 def _archivesAPI(suburl, params=None):
     try:
         resp = requests.get(
-            "http{0}://{1}:{2}{3}".format(settings.ARCHIVES_PORT == 443 and 's' or '',
-                                          settings.ARCHIVES_SERVER,
-                                          settings.ARCHIVES_PORT,
-                                          suburl),
+            "http{0}://{1}:{2}{3}".format(
+                settings.ARCHIVES_PORT == 443 and 's' or '', settings.ARCHIVES_SERVER, settings.ARCHIVES_PORT, suburl
+            ),
             params=params,
             headers={
                 'Host': settings.ARCHIVES_HOST,
@@ -105,17 +104,21 @@ def annotateMessage(request):
     r = _archivesAPI('/message-id.json/%s' % thread.messageid)
     for m in r:
         if m['msgid'] == msgid:
-            annotation = MailThreadAnnotation(mailthread=thread,
-                                              user=request.user,
-                                              msgid=msgid,
-                                              annotationtext=msg,
-                                              mailsubject=m['subj'],
-                                              maildate=m['date'],
-                                              mailauthor=m['from'])
+            annotation = MailThreadAnnotation(
+                mailthread=thread,
+                user=request.user,
+                msgid=msgid,
+                annotationtext=msg,
+                mailsubject=m['subj'],
+                maildate=m['date'],
+                mailauthor=m['from'],
+            )
             annotation.save()
 
             for p in thread.patches.all():
-                PatchHistory(patch=p, by=request.user, what='Added annotation "%s" to %s' % (textwrap.shorten(msg, 100), msgid)).save_and_notify()
+                PatchHistory(
+                    patch=p, by=request.user, what='Added annotation "%s" to %s' % (textwrap.shorten(msg, 100), msgid)
+                ).save_and_notify()
                 p.set_modified()
                 p.save()
 
@@ -128,7 +131,11 @@ def deleteAnnotation(request):
     annotation = get_object_or_404(MailThreadAnnotation, pk=request.POST['id'])
 
     for p in annotation.mailthread.patches.all():
-        PatchHistory(patch=p, by=request.user, what='Deleted annotation "%s" from %s' % (annotation.annotationtext, annotation.msgid)).save_and_notify()
+        PatchHistory(
+            patch=p,
+            by=request.user,
+            what='Deleted annotation "%s" from %s' % (annotation.annotationtext, annotation.msgid),
+        ).save_and_notify()
         p.set_modified()
         p.save()
 
@@ -143,14 +150,16 @@ def parse_and_add_attachments(threadinfo, mailthread):
             # One or more attachments. For now, we're only actually going
             # to store and process the first one, even though the API gets
             # us all of them.
-            MailThreadAttachment.objects.get_or_create(mailthread=mailthread,
-                                                       messageid=t['msgid'],
-                                                       defaults={
-                                                           'date': t['date'],
-                                                           'author': t['from'],
-                                                           'attachmentid': t['atts'][0]['id'],
-                                                           'filename': t['atts'][0]['name'],
-                                                       })
+            MailThreadAttachment.objects.get_or_create(
+                mailthread=mailthread,
+                messageid=t['msgid'],
+                defaults={
+                    'date': t['date'],
+                    'author': t['from'],
+                    'attachmentid': t['atts'][0]['id'],
+                    'filename': t['atts'][0]['name'],
+                },
+            )
         # In theory we should remove objects if they don't have an
         # attachment, but how could that ever happen? Ignore for now.
 
@@ -188,15 +197,16 @@ def doAttachThread(cf, patch, msgid, user):
     else:
         # No existing thread existed, so create it
         # Now create a new mailthread entry
-        m = MailThread(messageid=r[0]['msgid'],
-                       subject=r[0]['subj'],
-                       firstmessage=r[0]['date'],
-                       firstauthor=r[0]['from'],
-                       latestmessage=r[-1]['date'],
-                       latestauthor=r[-1]['from'],
-                       latestsubject=r[-1]['subj'],
-                       latestmsgid=r[-1]['msgid'],
-                       )
+        m = MailThread(
+            messageid=r[0]['msgid'],
+            subject=r[0]['subj'],
+            firstmessage=r[0]['date'],
+            firstauthor=r[0]['from'],
+            latestmessage=r[-1]['date'],
+            latestauthor=r[-1]['from'],
+            latestsubject=r[-1]['subj'],
+            latestmsgid=r[-1]['msgid'],
+        )
         m.save()
         m.patches.add(patch)
         m.save()
@@ -248,12 +258,13 @@ def importUser(request):
 
         if User.objects.filter(username=u['u']).exists():
             return "User already exists"
-        User(username=u['u'],
-             first_name=u['f'],
-             last_name=u['l'],
-             email=u['e'],
-             password='setbypluginnotsha1',
-             ).save()
+        User(
+            username=u['u'],
+            first_name=u['f'],
+            last_name=u['l'],
+            email=u['e'],
+            password='setbypluginnotsha1',
+        ).save()
         return 'OK'
     else:
         raise Http404()

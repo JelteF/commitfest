@@ -37,23 +37,18 @@ urlpatterns = [
     re_path(r'^lookups/user/$', lookups.userlookup),
     re_path(r'^thread_notify/$', views.thread_notify),
     re_path(r'^cfbot_notify/$', views.cfbot_notify),
-
     # Auth system integration
     re_path(r'^(?:account/)?login/?$', pgcommitfest.auth.login),
     re_path(r'^(?:account/)?logout/?$', pgcommitfest.auth.logout),
     re_path(r'^auth_receive/$', pgcommitfest.auth.auth_receive),
     re_path(r'^auth_api/$', pgcommitfest.auth.auth_api),
-
     # Account management
     re_path(r'^account/profile/$', pgcommitfest.userprofile.views.userprofile),
-
     # Examples:
     # re_path(r'^$', 'pgpgcommitfest.commitfest.views.home', name='home),
     # re_path(r'^pgcommitfest/', include('pgcommitfest.foo.urls)),
-
     # Uncomment the admin/doc line below to enable admin documentation:
     # re_path(r'^admin/doc/', include('django.contrib.admindocs.urls)),
-
     # Uncomment the next line to enable the admin:
     re_path(r'^admin/', admin.site.urls),
 ]

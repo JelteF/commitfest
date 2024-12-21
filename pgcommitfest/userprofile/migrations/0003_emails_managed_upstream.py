@@ -5,7 +5,6 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('userprofile', '0002_notifications'),
     ]
@@ -26,11 +25,24 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='userprofile',
             name='notifyemail',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='notifier', to='userprofile.UserExtraEmail', verbose_name='Notifications sent to'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                related_name='notifier',
+                to='userprofile.UserExtraEmail',
+                verbose_name='Notifications sent to',
+            ),
         ),
         migrations.AlterField(
             model_name='userprofile',
             name='selectedemail',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, to='userprofile.UserExtraEmail', verbose_name='Sender email'),
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.SET_NULL,
+                to='userprofile.UserExtraEmail',
+                verbose_name='Sender email',
+            ),
         ),
     ]

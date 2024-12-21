@@ -6,7 +6,6 @@ from django.conf import settings
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ('userprofile', '0001_initial'),
     ]
@@ -30,7 +29,14 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='userprofile',
             name='notifyemail',
-            field=models.ForeignKey(related_name='notifier', verbose_name='Notifications sent to', blank=True, to='userprofile.UserExtraEmail', null=True, on_delete=models.CASCADE),
+            field=models.ForeignKey(
+                related_name='notifier',
+                verbose_name='Notifications sent to',
+                blank=True,
+                to='userprofile.UserExtraEmail',
+                null=True,
+                on_delete=models.CASCADE,
+            ),
         ),
         migrations.AlterField(
             model_name='userprofile',

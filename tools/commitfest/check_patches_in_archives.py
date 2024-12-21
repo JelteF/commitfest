@@ -16,21 +16,22 @@ import logging
 # Set up for accessing django
 sys.path.append(os.path.join(os.path.abspath(os.path.dirname(sys.argv[0])), '../../'))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "pgcommitfest.settings")
-import django # noqa: E402
+import django  # noqa: E402
+
 django.setup()
 
 from django.db import connection  # noqa: E402
 from django.conf import settings  # noqa: E402
 
-from pgcommitfest.commitfest.models import MailThreadAttachment # noqa: E402
+from pgcommitfest.commitfest.models import MailThreadAttachment  # noqa: E402
 
 if __name__ == "__main__":
     debug = "--debug" in sys.argv
 
     # Logging always done to stdout, but we can turn on/off how much
-    logging.basicConfig(format='%(asctime)s %(levelname)s: %(msg)s',
-                        level=debug and logging.DEBUG or logging.INFO,
-                        stream=sys.stdout)
+    logging.basicConfig(
+        format='%(asctime)s %(levelname)s: %(msg)s', level=debug and logging.DEBUG or logging.INFO, stream=sys.stdout
+    )
 
     mag = magic.open(magic.MIME)
     mag.load()
@@ -47,10 +48,9 @@ if __name__ == "__main__":
         logging.debug("Checking attachment %s" % a.attachmentid)
 
         resp = requests.get(
-            "http{0}://{1}:{2}{3}".format(settings.ARCHIVES_PORT == 443 and 's' or '',
-                                          settings.ARCHIVES_SERVER,
-                                          settings.ARCHIVES_PORT,
-                                          url),
+            "http{0}://{1}:{2}{3}".format(
+                settings.ARCHIVES_PORT == 443 and 's' or '', settings.ARCHIVES_SERVER, settings.ARCHIVES_PORT, url
+            ),
             headers={
                 'Host': settings.ARCHIVES_HOST,
             },

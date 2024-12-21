@@ -22,6 +22,10 @@ def userprofile(request):
     else:
         form = UserProfileForm(request.user, instance=profile)
 
-    return render(request, 'userprofileform.html', {
-        'form': form,
-    })
+    return render(
+        request,
+        'userprofileform.html',
+        {
+            'form': form,
+        },
+    )

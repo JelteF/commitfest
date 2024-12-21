@@ -27,12 +27,23 @@ class CommitFestFilterForm(forms.Form):
         self.fields['status'] = forms.ChoiceField(choices=c, required=False)
 
         q = Q(patch_author__commitfests=cf) | Q(patch_reviewer__commitfests=cf)
-        userchoices = [(-1, '* All'), (-2, '* None'), (-3, '* Yourself')] + [(u.id, '%s %s (%s)' % (u.first_name, u.last_name, u.username)) for u in User.objects.filter(q).distinct().order_by('first_name', 'last_name')]
-        self.fields['targetversion'] = forms.ChoiceField(choices=[('-1', '* All'), ('-2', '* None')] + [(v.id, v.version) for v in TargetVersion.objects.all()], required=False, label="Target version")
+        userchoices = [(-1, '* All'), (-2, '* None'), (-3, '* Yourself')] + [
+            (u.id, '%s %s (%s)' % (u.first_name, u.last_name, u.username))
+            for u in User.objects.filter(q).distinct().order_by('first_name', 'last_name')
+        ]
+        self.fields['targetversion'] = forms.ChoiceField(
+            choices=[('-1', '* All'), ('-2', '* None')] + [(v.id, v.version) for v in TargetVersion.objects.all()],
+            required=False,
+            label="Target version",
+        )
         self.fields['author'] = forms.ChoiceField(choices=userchoices, required=False)
         self.fields['reviewer'] = forms.ChoiceField(choices=userchoices, required=False)
 
-        for f in ('status', 'author', 'reviewer',):
+        for f in (
+            'status',
+            'author',
+            'reviewer',
+        ):
             self.fields[f].widget.attrs = {'class': 'input-medium'}
 
 
@@ -44,13 +55,23 @@ class PatchForm(forms.ModelForm):
 
     class Meta:
         model = Patch
-        exclude = ('commitfests', 'mailthreads', 'modified', 'lastmail', 'subscribers', )
+        exclude = (
+            'commitfests',
+            'mailthreads',
+            'modified',
+            'lastmail',
+            'subscribers',
+        )
 
     def __init__(self, *args, **kwargs):
         super(PatchForm, self).__init__(*args, **kwargs)
         self.fields['authors'].help_text = 'Enter part of name to see list'
         self.fields['reviewers'].help_text = 'Enter part of name to see list'
-        self.fields['committer'].label_from_instance = lambda x: '%s %s (%s)' % (x.user.first_name, x.user.last_name, x.user.username)
+        self.fields['committer'].label_from_instance = lambda x: '%s %s (%s)' % (
+            x.user.first_name,
+            x.user.last_name,
+            x.user.username,
+        )
 
         # Selectize multiple fields -- don't pre-populate everything
         for field, url in list(self.selectize_multiple_fields.items()):
@@ -73,11 +94,14 @@ class PatchForm(forms.ModelForm):
 
 class NewPatchForm(forms.ModelForm):
     threadmsgid = forms.CharField(max_length=200, required=True, label='Specify thread msgid', widget=ThreadPickWidget)
-#    patchfile = forms.FileField(allow_empty_file=False, max_length=50000, label='or upload patch file', required=False, help_text='This may be supported sometime in the future, and would then autogenerate a mail to the hackers list. At such a time, the threadmsgid would no longer be required.')
+    #    patchfile = forms.FileField(allow_empty_file=False, max_length=50000, label='or upload patch file', required=False, help_text='This may be supported sometime in the future, and would then autogenerate a mail to the hackers list. At such a time, the threadmsgid would no longer be required.')
 
     class Meta:
         model = Patch
-        fields = ('name', 'topic', )
+        fields = (
+            'name',
+            'topic',
+        )
 
     def clean_threadmsgid(self):
         try:
@@ -92,8 +116,10 @@ class NewPatchForm(forms.ModelForm):
 def _fetch_thread_choices(patch):
     for mt in patch.mailthread_set.order_by('-latestmessage'):
         ti = sorted(_archivesAPI('/message-id.json/%s' % mt.messageid), key=lambda x: x['date'], reverse=True)
-        yield [mt.subject,
-               [('%s,%s' % (mt.messageid, t['msgid']), 'From %s at %s' % (t['from'], t['date'])) for t in ti]]
+        yield [
+            mt.subject,
+            [('%s,%s' % (mt.messageid, t['msgid']), 'From %s at %s' % (t['from'], t['date'])) for t in ti],
+        ]
 
 
 review_state_choices = (
@@ -103,7 +129,9 @@ review_state_choices = (
 
 
 def reviewfield(label):
-    return forms.MultipleChoiceField(choices=review_state_choices, label=label, widget=forms.CheckboxSelectMultiple, required=False)
+    return forms.MultipleChoiceField(
+        choices=review_state_choices, label=label, widget=forms.CheckboxSelectMultiple, required=False
+    )
 
 
 class CommentForm(forms.Form):

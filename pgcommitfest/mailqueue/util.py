@@ -41,7 +41,7 @@ def send_mail(sender, receiver, fullmsg):
     QueuedMail(sender=sender, receiver=receiver, fullmsg=fullmsg).save()
 
 
-def send_template_mail(sender, senderaccountname, receiver, subject, templatename, templateattr={}, usergenerated=False):
-    send_simple_mail(sender, receiver, subject,
-                     get_template(templatename).render(templateattr),
-                     senderaccountname)
+def send_template_mail(
+    sender, senderaccountname, receiver, subject, templatename, templateattr={}, usergenerated=False
+):
+    send_simple_mail(sender, receiver, subject, get_template(templatename).render(templateattr), senderaccountname)

@@ -6,7 +6,7 @@ from .models import UserProfile, UserExtraEmail
 class UserProfileForm(forms.ModelForm):
     class Meta:
         model = UserProfile
-        exclude = ('user', )
+        exclude = ('user',)
 
     def __init__(self, user, *args, **kwargs):
         super(UserProfileForm, self).__init__(*args, **kwargs)

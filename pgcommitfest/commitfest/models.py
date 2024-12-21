@@ -79,7 +79,9 @@ class TargetVersion(models.Model):
     version = models.CharField(max_length=8, blank=False, null=False, unique=True)
 
     class Meta:
-        ordering = ['-version', ]
+        ordering = [
+            '-version',
+        ]
 
     def __str__(self):
         return self.version
@@ -99,7 +101,9 @@ class Patch(models.Model, DiffableModel):
     gitlink = models.URLField(blank=True, null=False, default='')
 
     # Version targeted by this patch
-    targetversion = models.ForeignKey(TargetVersion, blank=True, null=True, verbose_name="Target version", on_delete=models.CASCADE)
+    targetversion = models.ForeignKey(
+        TargetVersion, blank=True, null=True, verbose_name="Target version", on_delete=models.CASCADE
+    )
 
     authors = models.ManyToManyField(User, related_name='patch_author', blank=True)
     reviewers = models.ManyToManyField(User, related_name='patch_reviewer', blank=True)
@@ -217,8 +221,13 @@ class PatchOnCommitFest(models.Model):
         return [v for k, v in self._STATUS_CHOICES if k == self.status][0]
 
     class Meta:
-        unique_together = (('patch', 'commitfest',),)
-        ordering = ('-commitfest__startdate', )
+        unique_together = (
+            (
+                'patch',
+                'commitfest',
+            ),
+        )
+        ordering = ('-commitfest__startdate',)
 
 
 class PatchHistory(models.Model):
@@ -235,10 +244,9 @@ class PatchHistory(models.Model):
         return "%s - %s" % (self.patch.name, self.date)
 
     class Meta:
-        ordering = ('-date', )
+        ordering = ('-date',)
 
-    def save_and_notify(self, prevcommitter=None,
-                        prevreviewers=None, prevauthors=None):
+    def save_and_notify(self, prevcommitter=None, prevreviewers=None, prevauthors=None):
         # Save this model, and then trigger notifications if there are any. There are
         # many different things that can trigger notifications, so try them all.
         self.save()
@@ -263,7 +271,9 @@ class PatchHistory(models.Model):
         recipients.extend(self.patch.reviewers.filter(userprofile__notify_all_reviewer=True))
         if prevreviewers:
             # prevreviewers is a list
-            recipients.extend(User.objects.filter(id__in=[p.id for p in prevreviewers], userprofile__notify_all_reviewer=True))
+            recipients.extend(
+                User.objects.filter(id__in=[p.id for p in prevreviewers], userprofile__notify_all_reviewer=True)
+            )
 
         # Current or previous authors wants all notifications
         recipients.extend(self.patch.authors.filter(userprofile__notify_all_author=True))
@@ -297,7 +307,7 @@ class MailThread(models.Model):
         return self.subject
 
     class Meta:
-        ordering = ('firstmessage', )
+        ordering = ('firstmessage',)
 
 
 class MailThreadAttachment(models.Model):
@@ -311,7 +321,12 @@ class MailThreadAttachment(models.Model):
 
     class Meta:
         ordering = ('-date',)
-        unique_together = (('mailthread', 'messageid',), )
+        unique_together = (
+            (
+                'mailthread',
+                'messageid',
+            ),
+        )
 
 
 class MailThreadAnnotation(models.Model):
@@ -329,7 +344,7 @@ class MailThreadAnnotation(models.Model):
         return "%s %s (%s)" % (self.user.first_name, self.user.last_name, self.user.username)
 
     class Meta:
-        ordering = ('date', )
+        ordering = ('date',)
 
 
 class PatchStatus(models.Model):

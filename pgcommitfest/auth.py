@@ -66,6 +66,7 @@ class AuthBackend(ModelBackend):
 # Two regular django views to interact with the login system
 ####
 
+
 # Handle login requests by sending them off to the main site
 def login(request):
     if 'next' in request.GET:
@@ -79,11 +80,14 @@ def login(request):
         encryptor = AES.new(SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16], AES.MODE_CBC, iv)
         cipher = encryptor.encrypt(s.encode('ascii') + b' ' * (16 - (len(s) % 16)))  # pad to 16 bytes
 
-        return HttpResponseRedirect("%s?d=%s$%s" % (
-            settings.PGAUTH_REDIRECT,
-            base64.b64encode(iv, b"-_").decode('utf8'),
-            base64.b64encode(cipher, b"-_").decode('utf8'),
-        ))
+        return HttpResponseRedirect(
+            "%s?d=%s$%s"
+            % (
+                settings.PGAUTH_REDIRECT,
+                base64.b64encode(iv, b"-_").decode('utf8'),
+                base64.b64encode(cipher, b"-_").decode('utf8'),
+            )
+        )
     else:
         return HttpResponseRedirect(settings.PGAUTH_REDIRECT)
 
@@ -110,9 +114,9 @@ def auth_receive(request):
 
     # Set up an AES object and decrypt the data we received
     try:
-        decryptor = AES.new(base64.b64decode(settings.PGAUTH_KEY),
-                            AES.MODE_CBC,
-                            base64.b64decode(str(request.GET['i']), "-_"))
+        decryptor = AES.new(
+            base64.b64decode(settings.PGAUTH_KEY), AES.MODE_CBC, base64.b64decode(str(request.GET['i']), "-_")
+        )
         s = decryptor.decrypt(base64.b64decode(str(request.GET['d']), "-_")).rstrip(b' ').decode('utf8')
     except UnicodeDecodeError:
         return HttpResponse("Badly encoded data found", 400)
@@ -126,7 +130,7 @@ def auth_receive(request):
         return HttpResponse("Invalid encrypted data received.", status=400)
 
     # Check the timestamp in the authentication
-    if (int(data['t'][0]) < time.time() - 10):
+    if int(data['t'][0]) < time.time() - 10:
         return HttpResponse("Authentication token too old.", status=400)
 
     # Update the user record (if any)
@@ -153,7 +157,8 @@ def auth_receive(request):
         # somehow fix that live, give a proper error message and
         # have somebody look at it manually.
         if User.objects.filter(email=data['e'][0]).exists():
-            return HttpResponse("""A user with email %s already exists, but with
+            return HttpResponse(
+                """A user with email %s already exists, but with
 a different username than %s.
 
 This is almost certainly caused by some legacy data in our database.
@@ -162,7 +167,10 @@ and email address from above, and we'll manually merge the two accounts
 for you.
 
 We apologize for the inconvenience.
-""" % (data['e'][0], data['u'][0]), content_type='text/plain')
+"""
+                % (data['e'][0], data['u'][0]),
+                content_type='text/plain',
+            )
 
         if getattr(settings, 'PGAUTH_CREATEUSER_CALLBACK', None):
             res = getattr(settings, 'PGAUTH_CREATEUSER_CALLBACK')(
@@ -176,12 +184,13 @@ We apologize for the inconvenience.
             if res:
                 return res
 
-        user = User(username=data['u'][0],
-                    first_name=data['f'][0],
-                    last_name=data['l'][0],
-                    email=data['e'][0],
-                    password='setbypluginnotasha1',
-                    )
+        user = User(
+            username=data['u'][0],
+            first_name=data['f'][0],
+            last_name=data['l'][0],
+            email=data['e'][0],
+            password='setbypluginnotasha1',
+        )
         user.save()
 
         auth_user_created_from_upstream.send(sender=auth_receive, user=user)
@@ -193,17 +202,17 @@ We apologize for the inconvenience.
     django_login(request, user)
 
     # Signal that we have information about this user
-    auth_user_data_received.send(sender=auth_receive, user=user, userdata={
-        'secondaryemails': data['se'][0].split(',') if 'se' in data else []
-    })
+    auth_user_data_received.send(
+        sender=auth_receive, user=user, userdata={'secondaryemails': data['se'][0].split(',') if 'se' in data else []}
+    )
 
     # Finally, check of we have a data package that tells us where to
     # redirect the user.
     if 'd' in data:
         (ivs, datas) = data['d'][0].split('$')
-        decryptor = AES.new(SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16],
-                            AES.MODE_CBC,
-                            base64.b64decode(ivs, b"-_"))
+        decryptor = AES.new(
+            SHA.new(settings.SECRET_KEY.encode('ascii')).digest()[:16], AES.MODE_CBC, base64.b64decode(ivs, b"-_")
+        )
         s = decryptor.decrypt(base64.b64decode(datas, "-_")).rstrip(b' ').decode('utf8')
         try:
             rdata = parse_qs(s, strict_parsing=True)
@@ -267,7 +276,8 @@ def auth_api(request):
             for u in pushstruct.get('users', []):
                 user = _conditionally_update_record(
                     User,
-                    'username', 'username',
+                    'username',
+                    'username',
                     {
                         'firstname': 'first_name',
                         'lastname': 'last_name',
@@ -278,9 +288,20 @@ def auth_api(request):
 
                 # Signal that we have information about this user (only if it exists)
                 if user:
-                    auth_user_data_received.send(sender=auth_api, user=user, userdata={
-                        k: u[k] for k in u.keys() if k not in ['firstname', 'lastname', 'email', ]
-                    })
+                    auth_user_data_received.send(
+                        sender=auth_api,
+                        user=user,
+                        userdata={
+                            k: u[k]
+                            for k in u.keys()
+                            if k
+                            not in [
+                                'firstname',
+                                'lastname',
+                                'email',
+                            ]
+                        },
+                    )
 
     return HttpResponse("OK", status=200)
 
@@ -311,9 +332,7 @@ def user_search(searchterm=None, userid=None):
     (ivs, datas) = r.text.encode('utf8').split(b'&')
 
     # Decryption time
-    decryptor = AES.new(base64.b64decode(settings.PGAUTH_KEY),
-                        AES.MODE_CBC,
-                        base64.b64decode(ivs, "-_"))
+    decryptor = AES.new(base64.b64decode(settings.PGAUTH_KEY), AES.MODE_CBC, base64.b64decode(ivs, "-_"))
     s = decryptor.decrypt(base64.b64decode(datas, "-_")).rstrip(b' ').decode('utf8')
     j = json.loads(s)
 
@@ -324,9 +343,11 @@ def user_search(searchterm=None, userid=None):
 def subscribe_to_user_changes(userid):
     socket.setdefaulttimeout(10)
 
-    body = json.dumps({
-        'u': userid,
-    })
+    body = json.dumps(
+        {
+            'u': userid,
+        }
+    )
 
     h = hmac.digest(
         base64.b64decode(settings.PGAUTH_KEY),
